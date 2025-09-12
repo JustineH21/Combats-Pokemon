@@ -1,3 +1,10 @@
+class Error(Exception):
+    #Classe permettant de générer des messages d'erreur, ça permettra d'éviter que ça plante j'espere
+
+    def __init__(self, msg):
+        self.message = msg
+
+
 class Pokemon:
     def __init__(self, nom:str, pokemon_type:str, niveau:int, EV:list, stats:list, capacites:list, sensibilites:dict):
         self.nom = nom
@@ -9,6 +16,10 @@ class Pokemon:
         self.sensibilites = sensibilites
         self.PV = self.stats[0]
 
+
+
+
+    
 class Combat:
     def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
@@ -48,14 +59,135 @@ class Combat:
                 pokemon = pokemon_affiches[int(choix_pokemon) - 1]
                 self.changer_pokemon(pokemon, "joueur")
 
-    def attaquer(self, choix):
-        pass
+    
+    
+    
+    
+    
+    
+    #fonctions qui permet de recuperer les valeurs des attributs du pokémon.
 
+    def getNom(self):
+        return self.nom
+
+    def getVies(self):
+        return self.hp
+
+    def getAttaque(self):
+        return self.attaque
+
+    def getDefense(self):
+        return self.defense
+
+    def getEtat(self):
+        return self.etat
+
+
+# fonctions qui permettent de modifier les valeurs des attributs du pokémon. 
+
+    def setEtat(self, nouvel_etat):
+    #Modifie la valeur de l'attribut etat (ex: poison, paralysie, etc.)
+        self.etat = nouvel_etat
+
+
+    def baisserVies(self, nb):
+        self.HP -= nb
+        if self.HP < 0:
+            self.HP = 0
+
+
+    def baisserAttaque(self, nb):
+        self.attaque -= nb
+        if self.attaque < 0:
+            self.attaque = 0
+
+
+    def baisserDefense(self, nb):
+        self.defense -= nb
+        if self.defense < 0:
+            self.defense = 0
+
+
+    def augmenterHP(self, nb):
+        self.HP += nb
+    # à moi-meme (chloe) limiter ici avec un max (self._vies = min(self._vies, self._vies_max(?)) 
+    def augmenterAttaque(self, nb):
+        self.attaque += nb
+
+    def augmenterDefense(self, nb):
+        self.defense += nb
+
+    
+    def attaquer(self, choix):
+        nom_attaque = attaque["nom_attaque"]
+        print("{} ATTAQUE {} !!".format(attaquant.getNom(), nom_attaque))
+
+    if len(attaque) == 3:  # Si attaque à effets
+        effet_attaque = attaque["effet_attaque"]
+        valeur_effet = attaque["valeur_attaque"]
+
+        if effet_attaque == 'attaque-e':
+            cible.baisserAttaque(valeur_effet)  #baisse attaque de la cible
+            print("L'attaque de {} diminue.".format(cible.getNom()))
+
+        elif effet_attaque == 'defense-e':
+            cible.baisserDefense(valeur_effet)  #baisse défense de la cible
+            print("La défense de {} diminue.".format(cible.getNom()))
+
+        elif effet_attaque == 'attaque+':
+            attaquant.augmenterAttaque(valeur_effet)  #augmente attaque de l'attaquant
+            print("L'attaque de {} augmente.".format(attaquant.getNom()))
+
+        elif effet_attaque == 'defense+':
+            attaquant.augmenterDefense(valeur_effet)  #augmente défense de l'attaquant
+            print("La défense de {} augmente.".format(attaquant.getNom()))
+
+        elif effet_attaque == 'poison':
+            cible.setEtat({"nom_etat": 'poison', "duree_etat": valeur_effet})
+            print("L'énergie de {} est drainée pendant {} tours !".format(cible.getNom(), valeur_effet))
+
+        elif effet_attaque == 'drainage':
+            cible.setEtat({"nom_etat": 'drainage', "duree_etat": valeur_effet})
+            print("{} est empoisonné pendant {} tours !".format(cible.getNom(), valeur_effet))
+
+        elif effet_attaque == 'paralysie':
+            cible.setEtat({"nom_etat": 'paralysie', "duree_etat": valeur_effet})
+            print("{} est paralysé pendant {} tours ! Il ne peut plus attaquer".format(cible.getNom(), valeur_effet))
+
+        else:
+            raise Error("ERREUR : Type d'attaque {} inconnu !".format(effet_attaque))
+
+    else:  # Si attaque classique
+        puissance_attaque = attaque["degats_attaque"]
+        degats_infliges = ((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/(cible.getDefense() * 2.4 + 1) #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
+        degats_infliges = round(degats_infliges)
+        cible.baisserHP(degats_infliges)
+        print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
+
+
+    #Mort du pokemon
+    def KO(self):
+    return self.PV == 0
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
     def utiliser_objet(self):
         pass
 
     def changer_pokemon(self, nouveau_pokemon, equipe):
         pass
+        
+    
+
+    
 
 class Objets:
     def __init__(self, nom, objet_type, equipe):
