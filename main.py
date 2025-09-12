@@ -175,9 +175,9 @@ class Combat:
     
     def augmenterStatsNiveau(self):
     """ Augmente les stats du Pokémon à chaque montée de niveau. """
-    self._attaque += 2 #à moi meme, trouver les maths pour augmenter les stats
-    self._defense += 2
-    self._vies += 5  # Il récupère aussi des PV quand le pokemon gagne des niveaux 
+    self.attaque += 2 #à moi meme, trouver les maths pour augmenter les stats
+    self.defense += 2
+    self.vies += 5  # Il récupère aussi des PV quand le pokemon gagne des niveaux 
     print(f"{self.nom} bravo, votre pokemon s'améliore ! ATQ: {self.attaque}, DEF: {self.defense}, PV: {self.HP}")
 
     
