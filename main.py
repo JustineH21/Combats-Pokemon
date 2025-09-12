@@ -94,7 +94,7 @@ class Combat:
         self.etat = nouvel_etat
 
 
-    def baisserVies(self, nb):
+    def baisserHP(self, nb):
         self.HP -= nb
         if self.HP < 0:
             self.HP = 0
@@ -187,11 +187,11 @@ class Combat:
     print(f"{self.nom} gagne {nb} XP !")
 
     # Tant que le pokémon a assez d'XP pour monter de niveau
-    while self.xp >= self._xp_max:
-        self.xp -= self._xp_max
+    while self.xp >= self.xp_max:
+        self.xp -= self.xp_max
         self.niveau += 1
-        print(f"{self._nom} monte au niveau {self._niveau} !")
-        self.xp_max = int(self._xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
+        print(f"{self.nom} monte au niveau {self.niveau} !")
+        self.xp_max = int(self.xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
         self.augmenterStatsNiveau()
 
     
