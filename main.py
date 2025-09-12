@@ -69,7 +69,7 @@ class Combat:
     
     
     
-    #fonctions qui permet de recuperer les valeurs des attributs du pokémon.
+    #fonctions qui permet de recuperer les valeurs des attributs du pokémon et d'afficher les infos sur le jeu normalement.
 
     def getNom(self):
         return self.nom
@@ -85,6 +85,16 @@ class Combat:
 
     def getEtat(self):
         return self.etat
+
+    def getNiveau(self):
+        return self.niveau
+
+    def getXP(self):
+        return self.xp
+
+    def getXPMax(self):
+        return self.xp_max
+
 
 
 # fonctions qui permettent de modifier les valeurs des attributs du pokémon. 
