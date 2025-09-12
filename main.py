@@ -204,6 +204,11 @@ class Combat:
         self.xp_max = int(self.xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
         self.augmenterStatsNiveau()
 
+
+    def gagner_Exp_Selon_Lvl(self, cible):
+        xp_gagnee = 20 + (cible.getNiveau() * 5)
+        self.gagnerExperience(xp_gagnee)
+
 #________________________________________________________________________________________________________________________________________________________________________________________________________________ 
     
     
