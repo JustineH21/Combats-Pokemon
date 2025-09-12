@@ -16,8 +16,7 @@ class Pokemon:
         self.sensibilites = sensibilites
         self.PV = self.stats[0]
 
-
-
+        
 
     
 class Combat:
@@ -26,6 +25,11 @@ class Combat:
         self.equipes = {"joueur": equipe_joueur, "ordi": equipe_ordi}
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
         self.listes_objet = {"joueur": {}, "ordi": {}}
+
+        self.niveau = 1
+        self.xp = 0
+        self.xp_max = 100 #xp nécessaires pour prochain niveau
+
 
     def choisir_option(self):
         """
@@ -169,7 +173,26 @@ class Combat:
     def KO(self):
     return self.PV == 0
     
+    def augmenterStatsNiveau(self):
+    """ Augmente les stats du Pokémon à chaque montée de niveau. """
+    self._attaque += 2 #à moi meme, trouver les maths pour augmenter les stats
+    self._defense += 2
+    self._vies += 5  # Il récupère aussi des PV quand le pokemon gagne des niveaux 
+    print(f"{self.nom} bravo, votre pokemon s'améliore ! ATQ: {self.attaque}, DEF: {self.defense}, PV: {self.HP}")
+
     
+    def gagnerExp(self, nb):
+    """ Ajoute des points d'expérience au Pokémon et gère les montées de niveau. """
+    self.xp += nb
+    print(f"{self.nom} gagne {nb} XP !")
+
+    # Tant que le pokémon a assez d'XP pour monter de niveau
+    while self.xp >= self._xp_max:
+        self.xp -= self._xp_max
+        self.niveau += 1
+        print(f"{self._nom} monte au niveau {self._niveau} !")
+        self.xp_max = int(self._xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
+        self.augmenterStatsNiveau()
 
     
     
