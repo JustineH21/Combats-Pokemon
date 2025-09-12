@@ -66,7 +66,7 @@ class Combat:
     
     
     
-    
+    #Ce que Chloé a ajouté (pour qu'on se retrouve dans tout ça)____________________________________________________________________________________________________________________________________________________________
     
     
     #fonctions qui permet de recuperer les valeurs des attributs du pokémon et d'afficher les infos sur le jeu normalement.
@@ -204,8 +204,7 @@ class Combat:
         self.xp_max = int(self.xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
         self.augmenterStatsNiveau()
 
-    
-    
+#________________________________________________________________________________________________________________________________________________________________________________________________________________ 
     
     
     
