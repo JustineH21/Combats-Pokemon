@@ -5,6 +5,7 @@ infos :
 - je n'ai pas compris ce que tu as fait dans la méthode attaquer, avec len(attaque) == 3 ? donc j'ai laissé comme ça mais ça ne fonctionne probablement pas
     --> je sais juste que "attaquant", c'est censé être : self.pokemons_en_jeu[self.player]
     --> et "cible" je l'ai défini juste avant pour que ça fonctionne
+- j'ai remis la classe Error parce qu'en fait tu l'appelais quelque part
 
 Objets :
 ⦁	Soins
