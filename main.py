@@ -1,10 +1,3 @@
-class Error(Exception):
-    #Classe permettant de générer des messages d'erreur, ça permettra d'éviter que ça plante j'espere
-
-    def __init__(self, msg):
-        self.message = msg
-
-
 class Pokemon:
     def __init__(self, nom:str, pokemon_type:str, niveau:int, EV:list, stats:list, capacites:list, sensibilites:dict):
         self.nom = nom
@@ -20,7 +13,7 @@ class Pokemon:
 
     
 class Combat:
-    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
+    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list,nouveau_pokemon: str, equipe: list):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
         self.equipes = {"joueur": equipe_joueur, "ordi": equipe_ordi}
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
@@ -29,6 +22,10 @@ class Combat:
         self.niveau = 1
         self.xp = 0
         self.xp_max = 100 #xp nécessaires pour prochain niveau
+
+        self.nouveau_pokemon = nouveau_pokemon
+        self.equipe = equipe
+        self.pokemon_actif = self._equipe[0]  # Le premier Pokémon est actif par défaut
 
 
     def choisir_option(self):
@@ -62,6 +59,50 @@ class Combat:
                 choix_pokemon = input("Numéro du Pokémon à mettre en jeu : ")
                 pokemon = pokemon_affiches[int(choix_pokemon) - 1]
                 self.changer_pokemon(pokemon, "joueur")
+
+
+    def getPokemonActif(self):
+        return self.pokemon_actif
+
+    def getEquipe(self):
+        return self.equipe
+
+    def changerPokemon(self):
+    """ Permet au joueur de changer de Pokémon parmi Pokémon encore vivants. """
+    print("self.nouveau_pokemon + ", qui veux-tu envoyer au combat ?")
+
+    # Construction de la liste des Pokémon vivants (sauf le Pokémon déjà actif)
+    pokemons_vivants = []
+    for p in self.equipe:
+        if p.KO() == False and p != self.pokemon_actif:
+            pokemons_vivants.append(p)
+
+    # Vérifier s'il y a au moins un Pokémon vivant
+    if len(pokemons_vivants) == 0:
+        print("Aucun autre Pokémon vivant dans l’équipe !")
+        return False
+
+    # Afficher les choix possibles
+    i = 0
+    while i < len(pokemons_vivants):
+        pokemon = pokemons_vivants[i]
+        print(str(i + 1) + ". " + pokemon.getNom() + " (PV: " + str(pokemon.getHP()) + ")")
+        i = i + 1
+
+    # Demande au joueur de choisir
+    choix = 0
+    while choix < 1 or choix > len(pokemons_vivants):
+        saisi = input("Entrez le numéro du Pokémon à envoyer : ")
+        choix = int(saisi)
+
+    # Effectue changement Pokémon actif
+    self.pokemon_actif = pokemons_vivants[choix - 1]
+    print(self.nom + " envoie " + self.pokemon_actif.getNom() + " au combat !")
+    return True
+
+    self.pokemon_actif = pokemons_vivants[choix - 1]
+    print(f"{self.nom} envoie {self.pokemon_actif.getNom()} au combat !")
+    return True
 
     
     
@@ -120,7 +161,13 @@ class Combat:
         self.defense -= nb
         if self.defense < 0:
             self.defense = 0
-
+            
+    def baisserDefenseSpe(self, nb):
+        self.defenseSpe -= nb
+        if self.defenseSpe < 0:
+            self.defenseSpe = 0 
+    def baisserAttaqueSpe(self, nb):
+        self.attaqueSpe -= nb
 
     def augmenterHP(self, nb):
         self.HP += nb
@@ -130,6 +177,12 @@ class Combat:
 
     def augmenterDefense(self, nb):
         self.defense += nb
+
+    def augmenterAttSpe(self, nb):
+        self.attaqueSpe += nb
+        
+    def augmenterDefSpe(self, nb):
+        self.defenseSpe += nb 
 
     
     def attaquer(self, choix):
@@ -173,15 +226,13 @@ class Combat:
 
     else:  # Si attaque classique
         puissance_attaque = attaque["degats_attaque"]
-        degats_infliges = ((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/(cible.getDefense() * 2.4 + 1) #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
+        degats_infliges = (((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/50)+2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
         degats_infliges = round(degats_infliges)
         cible.baisserHP(degats_infliges)
         print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
 
-    #Mort du pokemon
-    def KO(self):
-    return self.PV == 0
+   
     
     def augmenterStatsNiveau(self):
     """ Augmente les stats du Pokémon à chaque montée de niveau. """
@@ -226,57 +277,6 @@ class Combat:
     def changer_pokemon(self, nouveau_pokemon, equipe):
         pass
         
-#_________________________________________________________________________________________________________________________________________________________________________________________________________________
-
-class Joueur:
-    def __init__(self, nouveau_pokemon: str, equipe: list):
-        
-        self.nouveau_pokemon = nouveau_pokemon
-        self.equipe = equipe
-        self.pokemon_actif = self._equipe[0]  # Le premier Pokémon est actif par défaut
-
-    def getPokemonActif(self):
-        return self.pokemon_actif
-
-    def getEquipe(self):
-        return self.equipe
-
-    def changerPokemon(self):
-    """ Permet au joueur de changer de Pokémon parmi Pokémon encore vivants. """
-    print("self.nouveau_pokemon + ", qui veux-tu envoyer au combat ?")
-
-    # Construction de la liste des Pokémon vivants (sauf le Pokémon déjà actif)
-    pokemons_vivants = []
-    for p in self.equipe:
-        if p.KO() == False and p != self.pokemon_actif:
-            pokemons_vivants.append(p)
-
-    # Vérifier s'il y a au moins un Pokémon vivant
-    if len(pokemons_vivants) == 0:
-        print("Aucun autre Pokémon vivant dans l’équipe !")
-        return False
-
-    # Afficher les choix possibles
-    i = 0
-    while i < len(pokemons_vivants):
-        pokemon = pokemons_vivants[i]
-        print(str(i + 1) + ". " + pokemon.getNom() + " (PV: " + str(pokemon.getHP()) + ")")
-        i = i + 1
-
-    # Demande au joueur de choisir
-    choix = 0
-    while choix < 1 or choix > len(pokemons_vivants):
-        saisi = input("Entrez le numéro du Pokémon à envoyer : ")
-        choix = int(saisi)
-
-    # Effectue changement Pokémon actif
-    self.pokemon_actif = pokemons_vivants[choix - 1]
-    print(self.nom + " envoie " + self.pokemon_actif.getNom() + " au combat !")
-    return True
-
-    self.pokemon_actif = pokemons_vivants[choix - 1]
-    print(f"{self.nom} envoie {self.pokemon_actif.getNom()} au combat !")
-    return True
 
 #_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
