@@ -18,6 +18,15 @@ class Pokemon:
         self.attaque = self.getAttaque()
         self.defense = self.getDefense()
         self.etat = None # pas de problème de statut pour le moment
+        self.orientation = None
+        self.role = None
+
+    def est_desavantage_type(self, ennemi):
+        """ Renvoie True si le Pokémon est sensible au type du Pokémon ennemi, False sinon """
+        for type in self.sensibilites:
+            if type == ennemi.type and self.sensibilites[type] > 1:
+                return True 
+        return False
 
     #fonctions qui permetent de recuperer les valeurs des attributs du pokémon et d'afficher les infos sur le jeu normalement.
 
@@ -79,6 +88,7 @@ class Combat:
 
     def ajouter_objet(self, nom, objet_type, equipe):
         """ Crée l'objet puis l'ajoute à la liste des objets de l'équipe """
+        trouve = False
         for i in range(len(self.listes_objet[equipe])):
             if self.listes_objet[equipe][i][0] == nom: # si l'objet est déja dans la liste, on ajoute 1 à sa quantité
                 self.listes_objet[equipe][i][2] += 1
@@ -105,7 +115,7 @@ class Combat:
             return choix
     
     def choisir_capacite(self, pokemon):
-        """ Demande au joueur de choisir une des capacités du Pokémon en jeu et renvoie le nom de la capacité choisie """
+        """ Si c'est le joueur, lui demande de choisir une des capacités du Pokémon en jeu et renvoie le nom de la capacité choisie, sinon, l'ordi choisit la meilleure option """
         for i in range(4): # car chaque Pokémon a 4 capacités
             print(i+1, ":", pokemon.capacites[i])
         choix = self.choisir_nombre("Numéro de l'attaque à effectuer : ", 1, 4)
@@ -219,6 +229,41 @@ class Combat:
                     i += 1
                 pokemon = pokemons_vivants[self.choisir_nombre("Numéro du Pokémon à mettre à la place : ", 1, len(pokemons_vivants) + 1)]
                 self.changer_pokemon(pokemon, "joueur")
+
+    def choisir_option_ordi(self): # définir les objets à utiliser !!!
+        if self.player == "ordi": # pour être sûre que la fonction n'est appelée que pour l'ordi
+            pokemon = self.pokemons_en_jeu["ordi"]
+            if pokemon.PV < pokemon.stats[0]/2: # si le Pokémon a moins de la moitié de ses PV
+                if pokemon.etat == "Confusion": # s'il est faible et a une altération de statut, on soigne l'altération
+                    if pokemon.PV < pokemon.stats[0]/4:
+                        self.utiliser_objet()
+                    else:
+                        self.utiliser_objet()
+                elif pokemon == "utile": # si le Pokémon est encore utile, à définir
+                    self.utiliser_objet()
+                else:
+                    self.changer_pokemon()
+            elif pokemon.est_desavantage_type(self.pokemons_en_jeu["joueur"]):
+                self.changer_pokemon()
+            elif pokemon.etat != None: # si le Pokémon a un problème de statut
+                if pokemon.etat == "Brûlure" and pokemon.orientation == "Physique":
+                    self.utiliser_objet()
+                elif pokemon.etat == "Paralysie" and pokemon.role == "Sweeper":
+                    self.utiliser_objet()
+                elif (pokemon.etat == "Empoisonnement" and pokemon.role == "Tank") or pokemon.etat == "Empoisonnement grave":
+                    self.utiliser_objet()
+                elif pokemon.etat == "Sommeil":
+                    self.utiliser_objet()
+                elif pokemon.etat == "Gel":
+                    self.utiliser_objet()
+            elif self.pokemons_en_jeu["joueur"].PV < self.pokemons_en_jeu["joueur"].stats[0]/7: # si l'ennemi n'a plus que environ 15% de ses PV
+                pass # ATTAQUER AVEC UNE ATTAQUE PRIORITAIRE
+            elif self.pokemons_en_jeu["joueur"].role == "tank":
+                pass # ATTAQUER AVEC UNE ALTÉRATION DE STATUT
+            else:
+                pass # attaquer ou booster les stats
+
+
 
     def augmenterStatsNiveau(self):
         """ Augmente les stats du Pokémon à chaque montée de niveau. """
@@ -354,4 +399,4 @@ avaltout5 = Pokemon("Avaltout5", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 
 avaltout6 = Pokemon("Avaltout6", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
 combat = Combat(avaltout1, avaltout4, [avaltout1, avaltout2, avaltout3], [avaltout4, avaltout5, avaltout6])
-objet = Objets("objet", "joueur")
+#objet = Objets("objet", "joueur")
