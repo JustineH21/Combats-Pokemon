@@ -69,6 +69,7 @@ class Combat:
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
 
         self.listes_objet = {"joueur": [], "ordi": []}
+        # dictionnaire de la forme : {"joueur":[["nom1", Objet, quantite1], ["nom2", Objet, quantite2]], "ordi:[]"}
         for _ in range(5):
             self.ajouter_objet("Potion", "Soins", "joueur")
             self.ajouter_objet("Potion", "Soins", "ordi")
@@ -78,8 +79,13 @@ class Combat:
 
     def ajouter_objet(self, nom, objet_type, equipe):
         """ Crée l'objet puis l'ajoute à la liste des objets de l'équipe """
-        objet = Objets(nom, objet_type, equipe)
-        self.listes_objet[equipe].append([objet.nom, objet])
+        for i in range(len(self.listes_objet[equipe])):
+            if self.listes_objet[equipe][i][0] == nom: # si l'objet est déja dans la liste, on ajoute 1 à sa quantité
+                self.listes_objet[equipe][i][2] += 1
+                trouve = True
+        if trouve == False:
+            objet = Objets(nom, objet_type, equipe)
+            self.listes_objet[equipe].append([objet.nom, objet, 1])
     
     def choisir_nombre(self, texte:str, nb_min:int, nb_max:int):
         """ Demande au joueur de choisir un nombre jusqu'à ce que celui-ci soit valide et renvoie son choix"""
