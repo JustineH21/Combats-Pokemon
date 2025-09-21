@@ -251,6 +251,44 @@ class Combat:
         objet.utiliser_objet()
         return True
 
+    def choisir_pokemon_a_mettre_en_jeu_ordi(self):
+        liste = []
+        for pokemon in self.equipes["ordi"]:
+            if pokemon.PV > 0 and not (self.pokemons_en_jeu["ordi"] == pokemon): # on ne peut pas remettre le Pokémon en jeu en jeu
+                liste.append(pokemon)
+
+        if len(liste) > 1:
+            liste2 = []
+            for pokemon in liste:
+                ratio_PV = pokemon.PV / pokemon.stats[0]
+                faiblesses = 0
+                forces = 0
+                nb_ennemis = 0
+                for ennemi in self.equipes["joueur"]:
+                    if ennemi.PV > 0:
+                        if pokemon.est_desavantage_type(ennemi):
+                            faiblesses += 1
+                        if ennemi.est_desavantage_type(pokemon):
+                            forces += 1
+                    nb_ennemis += 1
+                faiblesses = faiblesses / nb_ennemis
+                forces = forces / nb_ennemis
+                coeff = ratio_PV - faiblesses + 0.5 * forces
+                liste2.append([pokemon, coeff])
+
+            meilleur_pokemon = liste2[0]
+            if liste2[1][1] > meilleur_pokemon[1]: # si le coeff du deuxième Pokémon est supérieur au coeff du premier Pokémon (car seulement 3 Pokémon par équipe)
+                meilleur_pokemon = liste2[1]
+
+        else:
+            if len(liste) == 0:
+                return False
+            else:
+                meilleur_pokemon = liste[0]
+
+        self.changer_pokemon(meilleur_pokemon)
+        return True
+
     def changer_pokemon(self, nouveau_pokemon, equipe):
         """ Permet de changer de Pokémon en ayant déjà le nouveau Pokémon à mettre en jeu """
         self.pokemons_en_jeu[equipe] = nouveau_pokemon
@@ -286,7 +324,7 @@ class Combat:
                 i = 0
                 while i < len(pokemons_vivants):
                     pokemon = pokemons_vivants[i]
-                    print(str(i + 1) + ". " + pokemon.getNom() + " (PV: " + str(pokemon.getHP()) + ")")
+                    print(str(i + 1) + ". " + pokemon.getNom() + " (PV : " + str(pokemon.getHP()) + ")")
                     i += 1
                 pokemon = pokemons_vivants[self.choisir_nombre("Numéro du Pokémon à mettre à la place : ", 1, len(pokemons_vivants) + 1)]
                 self.changer_pokemon(pokemon, "joueur")
@@ -296,32 +334,51 @@ class Combat:
         if self.player == "ordi": # pour être sûre que la fonction n'est appelée que pour l'ordi
             pokemon = self.pokemons_en_jeu["ordi"]
             ennemi = self.pokemons_en_jeu["joueur"] # pour que ça soit plus lisible
-            if pokemon.PV < pokemon.stats[0]/2: # si le Pokémon a moins de la moitié de ses PV
-                if pokemon == "utile": # si le Pokémon est encore utile, à définir
-                    self.utiliser_objet("PV")
+            action_faite = False
+            # on met toutes les options possibles en True, c'est-à-dire qu'on les considère comme faisable
+            # mais si jamais une action n'est pas faisable (par exemple on n'a pas de potion donc on ne peut pas se soigner), l'option passe en False
+            # c'est pour éviter que l'option soit reprise à chaque fois, même si elle n'est pas possible => éviter boucle infinie
+            option1 = [True, True] # car il y a deux sous-possibilités
+            option2 = True
+            option3 = [True, True, True, True, True]
+            option4 = True
+            option5 = True
+            while action_faite == False:
+                if pokemon.PV < pokemon.stats[0]/2: # si le Pokémon a moins de la moitié de ses PV
+                    if pokemon == "utile" and option1[0] == True: # si le Pokémon est encore utile, à définir
+                        action_faite = self.utiliser_objet("PV")
+                        option1[0] = action_faite
+                    elif option1[1] == True:
+                        action_faite = self.choisir_pokemon_a_mettre_en_jeu_ordi()
+                        option1[1] = action_faite
+                elif pokemon.est_desavantage_type(ennemi) and option2 == True:
+                    action_faite = self.changer_pokemon()
+                    option2 = action_faite
+                elif pokemon.etat != None: # si le Pokémon a un problème de statut
+                    if ((pokemon.etat == "Empoisonnement" and pokemon.role == "Tank") or pokemon.etat == "Empoisonnement grave") and option3[0] == True:
+                        action_faite = self.utiliser_objet("Empoisonnement")
+                        option3[0] = action_faite
+                    elif pokemon.etat == "Brûlure" and pokemon.orientation == "Physique" and option3[1] == True:
+                        action_faite = self.utiliser_objet("Brûlure")
+                        option3[1] = action_faite
+                    elif pokemon.etat == "Paralysie" and pokemon.role == "Sweeper" and option3[2] == True:
+                        action_faite = self.utiliser_objet("Paralysie")
+                        option3[2] = action_faite
+                    elif pokemon.etat == "Sommeil" and option3[3] == True:
+                        action_faite = self.utiliser_objet("Sommeil")
+                        option3[3] = action_faite
+                    elif pokemon.etat == "Gel" and option3[4] == True:
+                        action_faite = self.utiliser_objet("Gel")
+                        option3[4] = action_faite
+                elif ennemi.PV < ennemi.stats[0]/7 and option4 == True: # si l'ennemi n'a plus que environ 15% de ses PV
+                    pass # ATTAQUER AVEC UNE ATTAQUE PRIORITAIRE
+                    # option4 = action_faite
+                elif ennemi.role == "tank" and option5 == True:
+                    pass # ATTAQUER AVEC UNE ALTÉRATION DE STATUT
+                    # option5 = action faite
                 else:
-                    self.changer_pokemon()
-            elif pokemon.est_desavantage_type(ennemi):
-                self.changer_pokemon()
-            elif pokemon.etat != None: # si le Pokémon a un problème de statut
-                if (pokemon.etat == "Empoisonnement" and pokemon.role == "Tank") or pokemon.etat == "Empoisonnement grave":
-                    self.utiliser_objet("Empoisonnement")
-                elif pokemon.etat == "Brûlure" and pokemon.orientation == "Physique":
-                    self.utiliser_objet("Brûlure")
-                elif pokemon.etat == "Paralysie" and pokemon.role == "Sweeper":
-                    self.utiliser_objet("Paralysie")
-                elif pokemon.etat == "Sommeil":
-                    self.utiliser_objet("Sommeil")
-                elif pokemon.etat == "Gel":
-                    self.utiliser_objet("Gel")
-            elif ennemi.PV < ennemi.stats[0]/7: # si l'ennemi n'a plus que environ 15% de ses PV
-                pass # ATTAQUER AVEC UNE ATTAQUE PRIORITAIRE
-            elif ennemi.role == "tank":
-                pass # ATTAQUER AVEC UNE ALTÉRATION DE STATUT
-            else:
-                pass # attaquer ou booster les stats
-
-
+                    pass # attaquer ou booster les stats
+                    # action_faite = True ou False
 
     def augmenterStatsNiveau(self):
         """ Augmente les stats du Pokémon à chaque montée de niveau. """
