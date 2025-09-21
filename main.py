@@ -188,6 +188,7 @@ class Combat:
             print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
     def utiliser_objet(self, type = None):
+        """ Demande au joueur de choisir un objet, ou fait choisir un objet à l'ordinateur en fonction de ses besoins. Renvoie False si aucun objet n'a été choisi """
         objet = None
         if self.player == "joueur":
             objet = self.choisir_objet()
@@ -207,6 +208,9 @@ class Combat:
                         coeff = efficacite*0.7 + obj.quantite*0.3
                         liste.append([obj, coeff]) # crée une liste des objets de soins et de leur coeff
 
+                if len(liste) == 0:
+                    return False
+
                 meilleur_objet = liste[0]    
                 for obj, coeff in liste:
                     if coeff == None:
@@ -223,14 +227,29 @@ class Combat:
                         ratio = PV_max / PV_necessaire
                         PV_restants = PV_necessaire - PV_max
                         if ratio <= ratio_max and PV_restants >= PV_restants_min:
-                            objet = obj
+                            meilleur_objet = obj
 
                     elif coeff > meilleur_objet[1]:
                         meilleur_objet = obj
 
                 objet = meilleur_objet
                 
+            else:
+                total_soin = False
+                for obj in self.listes_objet["ordi"][1]:
+                    if obj.info == type:
+                        objet = obj
+                    elif obj.nom == "Total Soin":
+                        total_soin = obj
+                
+                if objet == None and total_soin != False: # si on n'a pas le spray nécessaire mais qu'on a un Total Soin
+                    objet = total_soin
+                
+                elif objet == None: # si on n'a toujours rien qui peut soigner l'altération de statut, on renvoie False
+                    return False
+                
         objet.utiliser_objet()
+        return True
 
     def changer_pokemon(self, nouveau_pokemon, equipe):
         """ Permet de changer de Pokémon en ayant déjà le nouveau Pokémon à mettre en jeu """
@@ -367,7 +386,7 @@ class Objets:
     def __init__(self, nom, objet_type, info):
         self.nom = nom
         self.objet_type = objet_type
-        self.info = info # ça peut être le nombre de PV à rajouter par exemple
+        self.info = info # nombre de PV pour les soins, cas où l'utiliser pour les sprays de statut
         self.quantite = 0
 
     def utiliser_objet(self):
