@@ -80,13 +80,13 @@ class Combat:
         self.listes_objet = {"joueur": [], "ordi": []}
         # dictionnaire de la forme : {"joueur":[["nom1", Objet, quantite1], ["nom2", Objet, quantite2]], "ordi:[]"}
         for _ in range(5):
-            self.ajouter_objet("Potion", "Soins", "joueur")
-            self.ajouter_objet("Potion", "Soins", "ordi")
+            self.ajouter_objet("Potion", "Soins", "joueur", 20)
+            self.ajouter_objet("Potion", "Soins", "ordi", 20)
         for _ in range(2):
-            self.ajouter_objet("Super Potion", "Soins", "joueur")
-            self.ajouter_objet("Super Potion", "Soins", "ordi")
+            self.ajouter_objet("Super Potion", "Soins", "joueur", 50)
+            self.ajouter_objet("Super Potion", "Soins", "ordi", 50)
 
-    def ajouter_objet(self, nom, objet_type, equipe):
+    def ajouter_objet(self, nom, objet_type, equipe, info):
         """ Crée l'objet puis l'ajoute à la liste des objets de l'équipe """
         trouve = False
         for i in range(len(self.listes_objet[equipe])):
@@ -94,8 +94,9 @@ class Combat:
                 self.listes_objet[equipe][i][2] += 1
                 trouve = True
         if trouve == False:
-            objet = Objets(nom, objet_type, equipe)
+            objet = Objets(nom, objet_type, equipe, info)
             self.listes_objet[equipe].append([objet.nom, objet, 1])
+        self.listes_objet[equipe][1].quantite += 1
     
     def choisir_nombre(self, texte:str, nb_min:int, nb_max:int):
         """ Demande au joueur de choisir un nombre jusqu'à ce que celui-ci soit valide et renvoie son choix"""
@@ -186,8 +187,49 @@ class Combat:
             cible.baisserHP(degats_infliges)
             print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
-    def utiliser_objet(self):
-        objet = self.choisir_objet()
+    def utiliser_objet(self, type = None):
+        objet = None
+        if self.player == "joueur":
+            objet = self.choisir_objet()
+        else:
+            if type == "PV":
+                meilleur_objet = None
+                liste = []
+                PV_necessaire = self.pokemons_en_jeu["ordi"].stats[0] - self.pokemons_en_jeu["ordi"].PV
+                PV_max = 0 # le maximum que l'on peut rajouter en PV avec l'objet le plus haut (hors Potion Max)
+                for obj in self.listes_objet["ordi"][1]:
+                    if obj.objet_type == "Soins":
+                        if obj.info == "max":
+                            coeff = None
+                        elif obj.info > PV_max:
+                            PV_max = obj.info
+                        efficacite = 1 - abs(obj.info - PV_necessaire)/PV_necessaire
+                        coeff = efficacite*0.7 + obj.quantite*0.3
+                        liste.append([obj, coeff]) # crée une liste des objets de soins et de leur coeff
+
+                meilleur_objet = liste[0]    
+                for obj, coeff in liste:
+                    if coeff == None:
+                        if obj.quantite < 3: # si on n'a que 1 ou 2 Potion Max
+                            ratio_max = 0.2 # il faut que le ratio entre la meilleure autre potion et les PV nécessaires soit inférieur à 20%
+                            PV_restants_min = 100 # le Pokémon doit avoir besoin d'encore au moins 100 PV après la meilleure autre potion
+                        elif obj.quantite >= 7:
+                            ratio_max = 0.5
+                            PV_restants_min = 50
+                        else:
+                            ratio_max = 0.33
+                            PV_restants_min = 75
+                        
+                        ratio = PV_max / PV_necessaire
+                        PV_restants = PV_necessaire - PV_max
+                        if ratio <= ratio_max and PV_restants >= PV_restants_min:
+                            objet = obj
+
+                    elif coeff > meilleur_objet[1]:
+                        meilleur_objet = obj
+
+                objet = meilleur_objet
+                
         objet.utiliser_objet()
 
     def changer_pokemon(self, nouveau_pokemon, equipe):
@@ -231,34 +273,31 @@ class Combat:
                 self.changer_pokemon(pokemon, "joueur")
 
     def choisir_option_ordi(self): # définir les objets à utiliser !!!
+        """ Fait choisir une option à l'ordi en fonction de la situation """
         if self.player == "ordi": # pour être sûre que la fonction n'est appelée que pour l'ordi
             pokemon = self.pokemons_en_jeu["ordi"]
+            ennemi = self.pokemons_en_jeu["joueur"] # pour que ça soit plus lisible
             if pokemon.PV < pokemon.stats[0]/2: # si le Pokémon a moins de la moitié de ses PV
-                if pokemon.etat == "Confusion": # s'il est faible et a une altération de statut, on soigne l'altération
-                    if pokemon.PV < pokemon.stats[0]/4:
-                        self.utiliser_objet()
-                    else:
-                        self.utiliser_objet()
-                elif pokemon == "utile": # si le Pokémon est encore utile, à définir
-                    self.utiliser_objet()
+                if pokemon == "utile": # si le Pokémon est encore utile, à définir
+                    self.utiliser_objet("PV")
                 else:
                     self.changer_pokemon()
-            elif pokemon.est_desavantage_type(self.pokemons_en_jeu["joueur"]):
+            elif pokemon.est_desavantage_type(ennemi):
                 self.changer_pokemon()
             elif pokemon.etat != None: # si le Pokémon a un problème de statut
-                if pokemon.etat == "Brûlure" and pokemon.orientation == "Physique":
-                    self.utiliser_objet()
+                if (pokemon.etat == "Empoisonnement" and pokemon.role == "Tank") or pokemon.etat == "Empoisonnement grave":
+                    self.utiliser_objet("Empoisonnement")
+                elif pokemon.etat == "Brûlure" and pokemon.orientation == "Physique":
+                    self.utiliser_objet("Brûlure")
                 elif pokemon.etat == "Paralysie" and pokemon.role == "Sweeper":
-                    self.utiliser_objet()
-                elif (pokemon.etat == "Empoisonnement" and pokemon.role == "Tank") or pokemon.etat == "Empoisonnement grave":
-                    self.utiliser_objet()
+                    self.utiliser_objet("Paralysie")
                 elif pokemon.etat == "Sommeil":
-                    self.utiliser_objet()
+                    self.utiliser_objet("Sommeil")
                 elif pokemon.etat == "Gel":
-                    self.utiliser_objet()
-            elif self.pokemons_en_jeu["joueur"].PV < self.pokemons_en_jeu["joueur"].stats[0]/7: # si l'ennemi n'a plus que environ 15% de ses PV
+                    self.utiliser_objet("Gel")
+            elif ennemi.PV < ennemi.stats[0]/7: # si l'ennemi n'a plus que environ 15% de ses PV
                 pass # ATTAQUER AVEC UNE ATTAQUE PRIORITAIRE
-            elif self.pokemons_en_jeu["joueur"].role == "tank":
+            elif ennemi.role == "tank":
                 pass # ATTAQUER AVEC UNE ALTÉRATION DE STATUT
             else:
                 pass # attaquer ou booster les stats
@@ -325,36 +364,35 @@ class Combat:
             print("L'ordinateur a gagné")
         
 class Objets:
-    def __init__(self, nom, objet_type, equipe):
+    def __init__(self, nom, objet_type, info):
         self.nom = nom
         self.objet_type = objet_type
+        self.info = info # ça peut être le nombre de PV à rajouter par exemple
+        self.quantite = 0
 
-    def utiliser_objet(self, equipe):
+    def utiliser_objet(self):
         """
         Retire l'objet utilisé de la liste des objets et effectue l'action liée à cet objet
         """
         for i in range(len(combat.listes_objet[combat.player])):
-            # recherche l'objet puis le supprime
-            if combat.listes_objet[combat.player][i][0] == self.nom:
-                del combat.listes_objet[combat.player][i]
-                break
+            if combat.listes_objet[combat.player][i][0] == self.nom: 
+                combat.listes_objet[combat.player][i][2] -= 1 # On retire 1 à la quantité de l'objet
+                if combat.listes_objet[combat.player][i][2] <= 0:
+                    del combat.listes_objet[combat.player][i] # si c'était le dernier exemplaire de cet objet, on le supprime complètement
+        combat.listes_objet[combat.player][1].quantite -= 1
 
         if self.objet_type == "Soins":
             pokemon_choisi = combat.choisir_pokemon()
-            if self.nom == "Potion":
-                PV_a_rajouter = 20
-            elif self.nom == "Super-potion":
-                PV_a_rajouter = 50
-            elif self.nom == "Hyper-potion":
-                PV_a_rajouter = 200
-            elif self.nom == "Potion Max":
-                PV_a_rajouter = combat.pokemon_choisi.stats[0]
-            
-            PV_max_a_rajouter = combat.pokemon_choisi.stats[0] - combat.pokemons_choisi.PV # calcule le nombre max de PV qu'on peut rajouter au Pokémon
-            if PV_a_rajouter >= PV_max_a_rajouter:
-                combat.pokemon_choisi.PV = combat.pokemon_choisi.stats[0]
+            if self.info == "max":
+                PV_a_rajouter = pokemon_choisi.stats[0]
             else:
-                combat.pokemon_choisi.PV += PV_a_rajouter
+                PV_a_rajouter = self.info
+            
+            PV_max_a_rajouter = pokemon_choisi.stats[0] - pokemon_choisi.PV # calcule le nombre max de PV qu'on peut rajouter au Pokémon
+            if PV_a_rajouter >= PV_max_a_rajouter:
+                pokemon_choisi.PV = pokemon_choisi.stats[0]
+            else:
+                pokemon_choisi.PV += PV_a_rajouter
 
         elif self.objet_type == "Réanimation":
             if self.nom == "Rappel" or self.nom == "Rappel Max":
