@@ -1,3 +1,5 @@
+from random import *
+
 class Error(Exception):
     #Classe permettant de générer des messages d'erreur, ça permettra d'éviter que ça plante
     def __init__(self, msg):
@@ -20,6 +22,7 @@ class Pokemon:
         self.etat = None # pas de problème de statut pour le moment
         self.orientation = None
         self.role = None
+        self.objet_tenu = None
 
     def est_desavantage_type(self, ennemi):
         """ Renvoie True si le Pokémon est sensible au type du Pokémon ennemi, False sinon """
@@ -70,7 +73,20 @@ class Pokemon:
             self.defense = 0
         elif self.PV > self.stats[2]: # si on a augmenté de plus que sa défense initiale
             self.PV = self.stats[2]
+
+class Capacite:
+    def __init__(self, nom, type, classe, PP, probabilite, puissance, priorite):
+        self.nom = nom
+        self.type = type
+        self.classe = classe
+        self.PP = PP
+        self.probabilite = probabilite
+        self.puissance = puissance
+        self.priorite = priorite
     
+    def utiliser_capacite(self):
+        pass
+
 class Combat:
     def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
@@ -122,7 +138,7 @@ class Combat:
         choix = self.choisir_nombre("Numéro de l'attaque à effectuer : ", 1, 4)
         return pokemon.capacites[choix - 1]
     
-    def choisir_objet(self):
+    def choisir_objet(self, type = None):
         """ 
         Affiche la liste des objets disponibles si c'est le joueur qui joue et lui demande de choisir.
         Renvoie l'objet choisi (pas son nom) 
@@ -131,67 +147,6 @@ class Combat:
             for i in range(len(self.listes_objet[self.player])):
                 print(i+1, ":", self.listes_objet[self.player][i][0]) # affiche le nom de l'objet
             choix = self.choisir_nombre("Numéro de l'objet à utiliser : ", 1, len(self.listes_objet[self.player]))
-        else:
-            pass
-        return self.listes_objet[self.player][choix - 1][1] # renvoie l'objet choisi (pas son nom)
-    
-    def attaquer(self, nom_attaque):
-        print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), nom_attaque))
-
-        if self.player == "joueur":
-            cible = self.pokemons_en_jeu["ordi"]
-            attaquant = self.pokemons_en_jeu["joueur"]
-        else:
-            cible = self.pokemons_en_jeu["joueur"]
-            attaquant = self.pokemons_en_jeu["ordi"]
-
-        if len(attaque) == 3:  # Si attaque à effets
-            effet_attaque = attaque["effet_attaque"]
-            valeur_effet = attaque["valeur_attaque"]
-
-            if effet_attaque == 'attaque-e':
-                cible.baisserAttaque(valeur_effet)  #baisse attaque de la cible
-                print("L'attaque de {} diminue.".format(cible.getNom()))
-
-            elif effet_attaque == 'defense-e':
-                cible.baisserDefense(valeur_effet)  #baisse défense de la cible
-                print("La défense de {} diminue.".format(cible.getNom()))
-
-            elif effet_attaque == 'attaque+':
-                attaquant.augmenterAttaque(valeur_effet)  #augmente attaque de l'attaquant
-                print("L'attaque de {} augmente.".format(attaquant.getNom()))
-
-            elif effet_attaque == 'defense+':
-                attaquant.augmenterDefense(valeur_effet)  #augmente défense de l'attaquant
-                print("La défense de {} augmente.".format(attaquant.getNom()))
-
-            elif effet_attaque == 'poison':
-                cible.setEtat({"nom_etat": 'poison', "duree_etat": valeur_effet})
-                print("L'énergie de {} est drainée pendant {} tours !".format(cible.getNom(), valeur_effet))
-
-            elif effet_attaque == 'drainage':
-                cible.setEtat({"nom_etat": 'drainage', "duree_etat": valeur_effet})
-                print("{} est empoisonné pendant {} tours !".format(cible.getNom(), valeur_effet))
-
-            elif effet_attaque == 'paralysie':
-                cible.setEtat({"nom_etat": 'paralysie', "duree_etat": valeur_effet})
-                print("{} est paralysé pendant {} tours ! Il ne peut plus attaquer".format(cible.getNom(), valeur_effet))
-
-            else:
-                raise Error("ERREUR : Type d'attaque {} inconnu !".format(effet_attaque))
-
-        else:  # Si attaque classique
-            puissance_attaque = attaque["degats_attaque"]
-            degats_infliges = (((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/50)+2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
-            degats_infliges = round(degats_infliges)
-            cible.baisserHP(degats_infliges)
-            print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
-
-    def utiliser_objet(self, type = None):
-        """ Demande au joueur de choisir un objet, ou fait choisir un objet à l'ordinateur en fonction de ses besoins. Renvoie False si aucun objet n'a été choisi """
-        objet = None
-        if self.player == "joueur":
-            objet = self.choisir_objet()
         else:
             if type == "PV":
                 meilleur_objet = None
@@ -248,15 +203,65 @@ class Combat:
                 elif objet == None: # si on n'a toujours rien qui peut soigner l'altération de statut, on renvoie False
                     return False
                 
+        return self.listes_objet[self.player][choix - 1][1] # renvoie l'objet choisi (pas son nom)
+    
+    def attaquer(self, nom_attaque):
+        print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), nom_attaque))
+
+        if self.player == "joueur":
+            cible = self.pokemons_en_jeu["ordi"]
+            attaquant = self.pokemons_en_jeu["joueur"]
+        else:
+            cible = self.pokemons_en_jeu["joueur"]
+            attaquant = self.pokemons_en_jeu["ordi"]
+
+        if len(attaque) == 3:  # Si attaque à effets
+            effet_attaque = attaque["effet_attaque"]
+            valeur_effet = attaque["valeur_attaque"]
+
+            if effet_attaque == 'attaque-e':
+                cible.baisserAttaque(valeur_effet)  #baisse attaque de la cible
+                print("L'attaque de {} diminue.".format(cible.getNom()))
+
+            elif effet_attaque == 'defense-e':
+                cible.baisserDefense(valeur_effet)  #baisse défense de la cible
+                print("La défense de {} diminue.".format(cible.getNom()))
+
+            elif effet_attaque == 'attaque+':
+                attaquant.augmenterAttaque(valeur_effet)  #augmente attaque de l'attaquant
+                print("L'attaque de {} augmente.".format(attaquant.getNom()))
+
+            elif effet_attaque == 'defense+':
+                attaquant.augmenterDefense(valeur_effet)  #augmente défense de l'attaquant
+                print("La défense de {} augmente.".format(attaquant.getNom()))
+
+            elif effet_attaque == 'poison':
+                cible.setEtat({"nom_etat": 'poison', "duree_etat": valeur_effet})
+                print("L'énergie de {} est drainée pendant {} tours !".format(cible.getNom(), valeur_effet))
+
+            elif effet_attaque == 'drainage':
+                cible.setEtat({"nom_etat": 'drainage', "duree_etat": valeur_effet})
+                print("{} est empoisonné pendant {} tours !".format(cible.getNom(), valeur_effet))
+
+            elif effet_attaque == 'paralysie':
+                cible.setEtat({"nom_etat": 'paralysie', "duree_etat": valeur_effet})
+                print("{} est paralysé pendant {} tours ! Il ne peut plus attaquer".format(cible.getNom(), valeur_effet))
+
+            else:
+                raise Error("ERREUR : Type d'attaque {} inconnu !".format(effet_attaque))
+
+        else:  # Si attaque classique
+            puissance_attaque = attaque["degats_attaque"]
+            degats_infliges = (((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/50)+2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
+            degats_infliges = round(degats_infliges)
+            cible.baisserHP(degats_infliges)
+            print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
+
+    def utiliser_objet(self, objet):
         objet.utiliser_objet()
-        return True
 
-    def choisir_pokemon_a_mettre_en_jeu_ordi(self):
-        liste = []
-        for pokemon in self.equipes["ordi"]:
-            if pokemon.PV > 0 and not (self.pokemons_en_jeu["ordi"] == pokemon): # on ne peut pas remettre le Pokémon en jeu en jeu
-                liste.append(pokemon)
-
+    def choisir_pokemon_a_mettre_en_jeu_ordi(self, liste):
+        """ Choisit le meilleur Pokémon à mettre en jeu à partir de la liste """
         if len(liste) > 1:
             liste2 = []
             for pokemon in liste:
@@ -280,11 +285,10 @@ class Combat:
             if liste2[1][1] > meilleur_pokemon[1]: # si le coeff du deuxième Pokémon est supérieur au coeff du premier Pokémon (car seulement 3 Pokémon par équipe)
                 meilleur_pokemon = liste2[1]
 
-        else:
-            if len(liste) == 0:
+        elif len(liste) == 0:
                 return False
-            else:
-                meilleur_pokemon = liste[0]
+        else:
+            meilleur_pokemon = liste[0]
 
         self.changer_pokemon(meilleur_pokemon)
         return True
@@ -294,6 +298,13 @@ class Combat:
         self.pokemons_en_jeu[equipe] = nouveau_pokemon
         print(equipe + " envoie " + self.pokemons_en_jeu[equipe].getNom() + " au combat !")
 
+    def liste_pokemons_vivants_pas_en_jeu(self):
+        pokemons_vivants = []
+        for p in self.equipes[self.player]:
+            if p.PV > 0 and p != self.pokemons_en_jeu[self.player]:
+                pokemons_vivants.append(p)
+        return pokemons_vivants
+
     def choisir_option_joueur(self):
         """ Demande au joueur de choisir une action puis lance l'action """
         if self.player == "joueur": # pour être sûr que la fonction n'est appelée que pour le joueur
@@ -302,32 +313,28 @@ class Combat:
             print("2 : Utiliser un objet")
             
             # Vérifier s'il y a au moins un Pokémon vivant avant de proposer au joueur de changer de Pokémon
-            pokemons_vivants = []
-            for p in self.equipes[self.player]:
-                 if p.PV > 0 and p != self.pokemons_en_jeu[self.player]:
-                     pokemons_vivants.append(p)
+            pokemons_vivants = self.liste_pokemons_vivants_pas_en_jeu()
             if len(pokemons_vivants) > 0:
                 print("3 : Changer de Pokémon")
-                choix = self.choisir_nombre("Numéro de l'action à faire : ", 1, 3)
+                choix1= self.choisir_nombre("Numéro de l'action à faire : ", 1, 3)
             else:
-                choix = self.choisir_nombre("Numéro de l'action à faire : ", 1, 2)
-            
-            if choix == 1:
-                capacite = self.choisir_capacite(self.pokemons_en_jeu[self.player])
-                self.attaquer(capacite)
-            
-            elif choix == 2:
-                self.utiliser_objet()
+                choix1 = self.choisir_nombre("Numéro de l'action à faire : ", 1, 2)
 
-            elif choix == 3:
-                # Afficher les choix possibles
+            if choix1 == 1:
+                choix2 = self.choisir_capacite(self.pokemons_en_jeu[self.player])
+            
+            elif choix1 == 2:
+                choix2 = self.choisir_objet()
+
+            elif choix1 == 3:
                 i = 0
                 while i < len(pokemons_vivants):
                     pokemon = pokemons_vivants[i]
                     print(str(i + 1) + ". " + pokemon.getNom() + " (PV : " + str(pokemon.getHP()) + ")")
                     i += 1
-                pokemon = pokemons_vivants[self.choisir_nombre("Numéro du Pokémon à mettre à la place : ", 1, len(pokemons_vivants) + 1)]
-                self.changer_pokemon(pokemon, "joueur")
+                choix2 = pokemons_vivants[self.choisir_nombre("Numéro du Pokémon à envoyer : ", 1, len(pokemons_vivants) + 1)]
+
+            return [choix1, choix2]
 
     def choisir_option_ordi(self): # définir les objets à utiliser !!!
         """ Fait choisir une option à l'ordi en fonction de la situation """
@@ -349,7 +356,11 @@ class Combat:
                         action_faite = self.utiliser_objet("PV")
                         option1[0] = action_faite
                     elif option1[1] == True:
-                        action_faite = self.choisir_pokemon_a_mettre_en_jeu_ordi()
+                        liste = []
+                        for pokemon in self.equipes["ordi"]:
+                            if pokemon.PV > 0 and not (self.pokemons_en_jeu["ordi"] == pokemon): # on ne peut pas remettre le Pokémon en jeu en jeu
+                                liste.append(pokemon)
+                        action_faite = self.choisir_pokemon_a_mettre_en_jeu_ordi(liste)
                         option1[1] = action_faite
                 elif pokemon.est_desavantage_type(ennemi) and option2 == True:
                     action_faite = self.changer_pokemon()
@@ -426,12 +437,57 @@ class Combat:
 
     def faire_un_combat(self):
         while self.verifier_victoire == None:
-            if self.player == "joueur":
-                self.choisir_option_joueur()
-                self.player = "ordi" # passe au tour de l'ordi
-            else:
-                self.choisir_option_ordi()
-                self.player = "joueur" # passe au tour du joueur
+            self.player = "joueur"
+            action_joueur = self.choisir_option_joueur()
+            self.player = "ordi"
+            action_ordi = self.choisir_option_ordi()
+            
+            if action_ordi[0] == 3 or action_joueur[0] == 3:
+                if action_ordi[0] == action_joueur[0]: # si les deux changent de Pokémon, on calcule la priorité
+                    if action_ordi[1].stats[5] == action_joueur[1].stats[5]:
+                        if random.randint(1, 2) == 1:
+                            self.player = "ordi"
+                            self.changer_pokemon(action_ordi[1], "ordi")
+                        else:
+                            self.player = "joueur"
+                            self.changer_pokemon(action_joueur[1], "joueur")
+                    elif action_ordi[1].stats[5] < action_joueur[1].stats[5]:
+                        self.player = "joueur"
+                        self.changer_pokemon(action_joueur[1], "joueur")
+                    else:
+                        self.player = "ordi"
+                        self.changer_pokemon(action_ordi[1], "ordi")
+                else: 
+                    if action_joueur[0] == 3:
+                        self.player = "joueur"
+                        self.changer_pokemon(action_joueur[1], "joueur")
+                    else:
+                        self.player = "ordi"
+                        self.changer_pokemon(action_ordi[1], "ordi")
+            
+            if action_ordi[0] == 2 or action_joueur[0] == 2:
+                if (action_joueur[0] == action_ordi[0] and random.randint(1, 2) == 1) or action_joueur[0] == 2:
+                    if random.randint(1, 2) == 1:
+                        self.player = "joueur"
+                        self.utiliser_objet(action_joueur[1])
+                else:
+                    self.player = "ordi"
+                    self.utiliser_objet(action_ordi[1])
+
+            if action_ordi[0] == 1 or action_joueur[0] == 1:
+                if action_ordi[1].priorite > action_joueur[1].priorite:
+                    self.player = "ordi"
+                    action_ordi[1].utiliser_capacite()
+                elif action_ordi[1].priorite < action_joueur[1].priorite:
+                    self.player = "joueur"
+                    action_joueur[1].utiliser_capacite()
+                elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]:
+                    self.player = "ordi"
+                    action_ordi[1].utiliser_capacite()
+                else:
+                    self.player = "joueur"
+                    action_joueur[1].utiliser_capacite()
+            
         if self.verifier_victoire == "égalité":
             print("Il y a eu égalité")
         elif self.verifier_victoire == "joueur":
@@ -445,6 +501,13 @@ class Objets:
         self.objet_type = objet_type
         self.info = info # nombre de PV pour les soins, cas où l'utiliser pour les sprays de statut
         self.quantite = 0
+
+    def objets_tenus(self, pokemon:Pokemon):
+        if self.nom == "Restes":
+            pokemon.PV += pokemon.stats[0]/16 # avec Restes, récupère 1/16 de ses PV chaque tour
+
+            if pokemon.PV > pokemon.stats[0]:
+                pokemon.PV = pokemon.stats[0] # pour pas avoir plus de PV que ceux de base
 
     def utiliser_objet(self):
         """
@@ -482,7 +545,7 @@ class Objets:
                             pokemon_choisi.PV = pokemon_choisi.stats[0]
                         objet_utilise = True
                     else:
-                        print("Ce Pokémon n'est pas KO, merci d'en choisir un autre qu'il l'est")
+                        print("Ce Pokémon n'est pas KO, merci d'en choisir un autre qui l'est")
             
             elif self.nom == "Cendre sacrée":
                 for pokemon in combat.equipes[combat.player]:
@@ -503,9 +566,14 @@ class Objets:
             capacite = combat.choisir_capacite(pokemon)
             pokemon.capacites[capacite]["PP"] += PP_a_ajouter[1]
 
+# Création des capacités : nom, type, classe, PP, probabilité, puissance, priorité
+detricanon = Capacite("Détricanon", "Poison", "Physique", 5, 80, 120, 1)
+repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1)
+bombe_beurk = Capacite("Bombe Beurk", "Poison", "Spéciale", 10, 100, 90, 1)
+seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 
 # pour les EV et les stats : [HP, Attaque, Défense, Attaque Spé, Défense Spé, Vitesse]
-avaltout1 = Pokemon("Avaltout1", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+avaltout1 = Pokemon("Avaltout1", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [detricanon, repos, bombe_beurk, seisme], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout2 = Pokemon("Avaltout2", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout3 = Pokemon("Avaltout3", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout4 = Pokemon("Avaltout4", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
