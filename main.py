@@ -452,6 +452,33 @@ class Combat:
             return None
 
     def faire_un_combat(self):
+        nb = {"joueur":random.randint(1, 3), "ordi": random.randint(1, 3)}
+        self.player = "joueur"
+        if nb["joueur"] == 1:
+            print("Vous obtenez une Baie Sitrus")
+        elif nb["joueur"] == 2:
+            print("Vous obtenez des Restes")
+        else:
+            print("Vous obtenez un Casque Brut")
+        for i in range(len(self.equipes["joueur"])):
+            print(i+1, ". ", self.equipes["joueur"][i])
+        choix = {"joueur": self.choisir_nombre("Choisissez le Pokémon à qui vous voulez donner cet objet", 1, len(self.equipes["joueur"]))}
+
+        self.player = "ordi"
+        nb_2 = random.randint(1, len(self.equipes["ordi"]))
+        for i in range(len(self.equipes["ordi"])):
+            if i == nb_2:
+                choix["ordi"] = self.equipes["ordi"][i]
+
+        for player in ["joueur", "ordi"]:
+            self.player = player
+            if nb[player] == 1:
+                choix[player].objet_tenu = Objets("Baie Sitrus")
+            elif nb[player] == 2:
+                choix[player].objet_tenu = Objets("Restes")
+            else:
+                choix[player].objet_tenu = Objets("Casque Brut")
+
         while self.verifier_victoire == None:
             self.player = "joueur"
             action_joueur = self.choisir_option_joueur()
@@ -520,7 +547,7 @@ class Combat:
             print("L'ordinateur a gagné")
         
 class Objets:
-    def __init__(self, nom, objet_type, info):
+    def __init__(self, nom, objet_type=None, info=None):
         self.nom = nom
         self.objet_type = objet_type
         self.info = info # nombre de PV pour les soins, cas où l'utiliser pour les sprays de statut
@@ -607,5 +634,5 @@ dracolosse = Pokemon("Dracolosse", "Dragon" "Vol", 50, [100, 73, 83, 73, 83, 55]
 avaltout5 = Pokemon("Avaltout5", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout6 = Pokemon("Avaltout6", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
-combat = Combat(avaltout1, avaltout4, [avaltout1, avaltout2, avaltout3], [avaltout4, avaltout5, avaltout6])
+combat = Combat(roserade, carchacrok, [roserade, milobellus, avaltout5], [carchacrok, dracolosse, avaltout6])
 #objet = Objets("objet", "joueur")
