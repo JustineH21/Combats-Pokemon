@@ -6,7 +6,7 @@ class Error(Exception):
         self.message = msg
 
 class Pokemon:
-    def __init__(self, nom:str, pokemon_type:str, niveau:int, EV:list, stats:list, capacites:list, sensibilites:dict):
+    def __init__(self, nom:str, pokemon_type:str, EV:list, stats:list, capacites:list, sensibilites:dict):
         self.nom = nom
         self.type = pokemon_type
         self.niveau = 1
@@ -19,7 +19,7 @@ class Pokemon:
         self.PV = self.getPV()
         self.attaque = self.getAttaque()
         self.defense = self.getDefense()
-        self.etat = None # pas de problème de statut pour le moment
+        self.etat = None # pas de problème de statut pour le moment, après, dictionnaire : {"nom_etat": "...", "duree_etat": ...}
         self.orientation = None
         self.role = None
         self.objet_tenu = None
@@ -30,6 +30,13 @@ class Pokemon:
             if type == ennemi.type and self.sensibilites[type] > 1:
                 return True 
         return False
+    
+    def efficacite_type(self, type_attaque:str):
+        """ Renvoie la sensibilité d'un Pokémon à une attaque """
+        for type in self.sensibilites:
+            if type_attaque == type:
+                return self.sensibilites[type]
+        return 1
 
     #fonctions qui permetent de recuperer les valeurs des attributs du pokémon et d'afficher les infos sur le jeu normalement.
 
@@ -75,7 +82,7 @@ class Pokemon:
             self.PV = self.stats[2]
 
 class Capacite:
-    def __init__(self, nom, type, classe, PP, probabilite, puissance, priorite):
+    def __init__(self, nom, type, classe, PP, probabilite, puissance, priorite, effet_attaque, valeur_effet):
         self.nom = nom
         self.type = type
         self.classe = classe
@@ -83,9 +90,65 @@ class Capacite:
         self.probabilite = probabilite
         self.puissance = puissance
         self.priorite = priorite
+        self.effet_attaque = effet_attaque
+        self.valeur_effet = valeur_effet
     
-    def utiliser_capacite(self):
-        pass
+    def utiliser_capacite(self, attaquant:Pokemon, cible:Pokemon):
+        print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), self.nom))
+
+        if len(self.nom) == 3:  # Si attaque à effets
+            if self.effet_attaque == 'attaque-e':
+                cible.setAttaque(-1 * self.valeur_effet)  #baisse attaque de la cible
+                print("L'attaque de {} diminue.".format(cible.getNom()))
+
+            elif self.effet_attaque == 'defense-e':
+                cible.setDefense(-1 * self.valeur_effet)  #baisse défense de la cible
+                print("La défense de {} diminue.".format(cible.getNom()))
+
+            elif self.effet_attaque == 'attaque+':
+                attaquant.setAttaque(self.valeur_effet)  #augmente attaque de l'attaquant
+                print("L'attaque de {} augmente.".format(attaquant.getNom()))
+
+            elif self.effet_attaque == 'defense+':
+                attaquant.setDefense(self.valeur_effet)  #augmente défense de l'attaquant
+                print("La défense de {} augmente.".format(attaquant.getNom()))
+
+            elif self.effet_attaque == 'poison':
+                cible.setEtat({"nom_etat": 'poison', "duree_etat": self.valeur_effet})
+                print("{} est empoisonné pendant {} tours !".format(cible.getNom(), self.valeur_effet))
+
+            elif self.effet_attaque == 'drainage':
+                cible.setEtat({"nom_etat": 'drainage', "duree_etat": self.valeur_effet})
+                print("L'énergie de {} est drainée pendant {} tours !".format(cible.getNom(), self.valeur_effet))
+
+            elif self.effet_attaque == 'paralysie':
+                cible.setEtat({"nom_etat": 'paralysie', "duree_etat": self.valeur_effet})
+                print("{} est paralysé pendant {} tours ! Il ne peut plus attaquer".format(cible.getNom(), self.valeur_effet))
+
+            else:
+                raise Error("ERREUR : Type d'attaque {} inconnu !".format(self.effet_attaque))
+
+        else:  # Si attaque classique
+            if self.type == "Spéciale":
+                attaque = attaquant.stats[3]
+                defense = cible.stats[4]
+            else:
+                attaque = attaquant.stats[1]
+                defense = cible.stats[2]
+            degats_infliges = abs(abs(abs((abs(attaquant.niveau * 0.4) + 2) * attaque * self.puissance)/defense)/50) + 2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
+            stab = 1
+            if attaquant.type == self.type:
+                stab = 1.5
+            efficacite = cible.efficacite_type(self.type)
+            coup_critique = 1
+            if random.randint(1, 16) == 1:
+                coup_critique = 1.5
+                print("COUP CRITIQUE !")
+            nombre = random.randint(85, 100)/100
+            cm = stab * efficacite * coup_critique * nombre
+            degats_infliges = abs(degats_infliges * cm)
+            cible.setPV(-1 * degats_infliges)
+            print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
 class Combat:
     def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
@@ -204,58 +267,6 @@ class Combat:
                     return False
                 
         return self.listes_objet[self.player][choix - 1][1] # renvoie l'objet choisi (pas son nom)
-    
-    def attaquer(self, nom_attaque):
-        print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), nom_attaque))
-
-        if self.player == "joueur":
-            cible = self.pokemons_en_jeu["ordi"]
-            attaquant = self.pokemons_en_jeu["joueur"]
-        else:
-            cible = self.pokemons_en_jeu["joueur"]
-            attaquant = self.pokemons_en_jeu["ordi"]
-
-        if len(attaque) == 3:  # Si attaque à effets
-            effet_attaque = attaque["effet_attaque"]
-            valeur_effet = attaque["valeur_attaque"]
-
-            if effet_attaque == 'attaque-e':
-                cible.baisserAttaque(valeur_effet)  #baisse attaque de la cible
-                print("L'attaque de {} diminue.".format(cible.getNom()))
-
-            elif effet_attaque == 'defense-e':
-                cible.baisserDefense(valeur_effet)  #baisse défense de la cible
-                print("La défense de {} diminue.".format(cible.getNom()))
-
-            elif effet_attaque == 'attaque+':
-                attaquant.augmenterAttaque(valeur_effet)  #augmente attaque de l'attaquant
-                print("L'attaque de {} augmente.".format(attaquant.getNom()))
-
-            elif effet_attaque == 'defense+':
-                attaquant.augmenterDefense(valeur_effet)  #augmente défense de l'attaquant
-                print("La défense de {} augmente.".format(attaquant.getNom()))
-
-            elif effet_attaque == 'poison':
-                cible.setEtat({"nom_etat": 'poison', "duree_etat": valeur_effet})
-                print("L'énergie de {} est drainée pendant {} tours !".format(cible.getNom(), valeur_effet))
-
-            elif effet_attaque == 'drainage':
-                cible.setEtat({"nom_etat": 'drainage', "duree_etat": valeur_effet})
-                print("{} est empoisonné pendant {} tours !".format(cible.getNom(), valeur_effet))
-
-            elif effet_attaque == 'paralysie':
-                cible.setEtat({"nom_etat": 'paralysie', "duree_etat": valeur_effet})
-                print("{} est paralysé pendant {} tours ! Il ne peut plus attaquer".format(cible.getNom(), valeur_effet))
-
-            else:
-                raise Error("ERREUR : Type d'attaque {} inconnu !".format(effet_attaque))
-
-        else:  # Si attaque classique
-            puissance_attaque = attaque["degats_attaque"]
-            degats_infliges = (((( niveau * 0.4 + 2)* attaque*puissance)/ defense)/50)+2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
-            degats_infliges = round(degats_infliges)
-            cible.baisserHP(degats_infliges)
-            print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
     def utiliser_objet(self, objet):
         objet.utiliser_objet()
