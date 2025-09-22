@@ -56,7 +56,14 @@ class Pokemon:
         return self.xp
     def getXPMax(self):
         return self.xp_max
+    def estKO(self):
+    return self.PV <= 0
+
+    def getCapacites(self):
+    return self.capacites
+
     
+
     # fonctions qui permettent de modifier les valeurs des attributs du pokémon. 
 
     def setEtat(self, nouvel_etat):
@@ -161,7 +168,7 @@ class Capacite:
 
 
 class Combat:
-    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee):
+    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee: dict):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
         self.equipes = {"joueur": equipe_joueur, "ordi": equipe_ordi}
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
