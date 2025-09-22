@@ -135,7 +135,7 @@ class Capacite:
             else:
                 attaque = attaquant.stats[1]
                 defense = cible.stats[2]
-            degats_infliges = abs(abs(abs((abs(attaquant.niveau * 0.4) + 2) * attaque * self.puissance)/defense)/50) + 2 #à moi-meme(chloé), revoir le calcul pour les dégats et appel des attribut/methodes
+            degats_infliges = abs(abs(abs((abs(attaquant.niveau * 0.4) + 2) * attaque * self.puissance)/defense)/50) + 2
             stab = 1
             if attaquant.type == self.type:
                 stab = 1.5
@@ -147,6 +147,11 @@ class Capacite:
             nombre = random.randint(85, 100)/100
             cm = stab * efficacite * coup_critique * nombre
             degats_infliges = abs(degats_infliges * cm)
+            if cible.objet_tenu != None and self.classe == "Physique": 
+                # si la cible porte un casque brut, elle ne peut pas perdre plus de 1/6 de ses PV maximums lors d'une attaque physique
+                if cible.objet_tenu.nom == "Casque Brut" and degats_infliges > cible.stats[0]/6:
+                    print("{} utilise son Casque Brut pour se protéger".format(cible.getNom()))
+                    degats_infliges = cible.stats[0]/6
             cible.setPV(-1 * degats_infliges)
             print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
@@ -498,6 +503,14 @@ class Combat:
                 else:
                     self.player = "joueur"
                     action_joueur[1].utiliser_capacite()
+
+            for player in ["ordi", "joueur"]:
+                if self.pokemons_en_jeu[player].objet_tenu != None:
+                    self.player = player
+                    if self.pokemons_en_jeu[player].objet_tenu.nom == "Baie Sitrus" and self.pokemons_en_jeu[player].PV < self.pokemons_en_jeu[player].stats[0]/2:
+                        self.pokemons_en_jeu[player].objet_tenu.utiliser_objet_tenu(self.pokemons_en_jeu[player])
+                    elif self.pokemons_en_jeu[player].objet_tenu.nom == "Restes":
+                        self.pokemons_en_jeu[player].objet_tenu.utiliser_objet_tenu(self.pokemons_en_jeu[player])
             
         if self.verifier_victoire == "égalité":
             print("Il y a eu égalité")
@@ -513,12 +526,15 @@ class Objets:
         self.info = info # nombre de PV pour les soins, cas où l'utiliser pour les sprays de statut
         self.quantite = 0
 
-    def objets_tenus(self, pokemon:Pokemon):
+    def utiliser_objet_tenu(self, pokemon:Pokemon):
         if self.nom == "Restes":
-            pokemon.PV += pokemon.stats[0]/16 # avec Restes, récupère 1/16 de ses PV chaque tour
+            pokemon.PV += pokemon.stats[0]/16 # avec Restes, récupère 1/16 de ses PV chaque tour (ne pert pas l'objet)
+        elif self.nom == "Baie Sitrus":
+            pokemon.PV += pokemon.stats[0]/4 # avec Baie Sitrus, récupère 1/4 de ses PV (pert l'objet)
+            pokemon.objet_tenu = None
 
-            if pokemon.PV > pokemon.stats[0]:
-                pokemon.PV = pokemon.stats[0] # pour pas avoir plus de PV que ceux de base
+        if pokemon.PV > pokemon.stats[0]:
+            pokemon.PV = pokemon.stats[0] # pour pas avoir plus de PV que ceux de base
 
     def utiliser_objet(self):
         """
