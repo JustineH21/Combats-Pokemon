@@ -155,12 +155,19 @@ class Capacite:
             cible.setPV(-1 * degats_infliges)
             print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
+       def capacites_noms(liste_noms):
+        return [CAPACITES[nom] for nom in liste_noms if nom in CAPACITES]
+ 
+
+
 class Combat:
-    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
+    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
         self.equipes = {"joueur": equipe_joueur, "ordi": equipe_ordi}
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
-
+        self.action_retardee = {
+            "joueur": None,
+            "ordi": None }
         self.listes_objet = {"joueur": [], "ordi": []}
         # dictionnaire de la forme : {"joueur":[["nom1", Objet, quantite1], ["nom2", Objet, quantite2]], "ordi:[]"}
         for _ in range(5):
@@ -407,6 +414,93 @@ class Combat:
                     pass # attaquer ou booster les stats
                     # action_faite = True ou False
 
+    
+
+    
+
+    def choisir_action_IA(self, pokemon_actuel, type_attaque_recue):
+        """
+        Choisit l'action à effectuer au prochain tour pour l'IA
+        en fonction du type d'attaque subie et du Pokémon actuellement en jeu.
+        L'action est stockée dans self.action_retardee["ordi"] pour exécution au tour suivant.
+        """
+    
+        nom_pokemon = pokemon_actuel.getNom().lower()
+    
+        # Cas 1 : Carchacrok
+        if nom_pokemon == "carchacrok":
+            if type_attaque_recue == "dragon":
+                self.action_retardee["ordi"] = {"action": "attaquer", "capacite": "dracogriffe"}
+                return
+    
+            elif type_attaque_recue == "poison":
+                self.action_retardee["ordi"] = {"action": "attaquer", "capacite": "séisme"}
+                return
+    
+            elif type_attaque_recue == "glace":
+                millobelus = self.getPokemonParNom("millobelus")
+                if millobelus and not millobelus.estKO():
+                    self.action_retardee["ordi"] = {
+                        "action": "switch",
+                        "nouveau_pokemon": millobelus,
+                        "attaque_prochaine": "ébullition"
+                    }
+                    return
+    
+        # Cas 2 : Milobellus
+        elif nom_pokemon == "millobelus":
+            if type_attaque_recue == "plante":
+                roserade = self.getPokemonParNom("roserade")
+                if roserade and not roserade.estKO():
+                    self.action_retardee["ordi"] = {
+                        "action": "switch",
+                        "nouveau_pokemon": roserade,
+                        "attaque_prochaine": "bombe beurk"
+                    }
+                    return
+    
+            elif type_attaque_recue == "electrique":
+                carchacrok = self.getPokemonParNom("carchacrok")
+                if carchacrok and not carchacrok.estKO():
+                    self.action_retardee["ordi"] = {
+                        "action": "switch",
+                        "nouveau_pokemon": carchacrok,
+                        "attaque_prochaine": "séisme"
+                    }
+                    return
+    
+        # Cas 3 : Roserade
+        elif nom_pokemon == "roserade":
+            if type_attaque_recue in ["feu", "glace"]:
+                millobelus = self.getPokemonParNom("millobelus")
+                if millobelus and not millobelus.estKO():
+                    self.action_retardee["ordi"] = {
+                        "action": "switch",
+                        "nouveau_pokemon": millobelus,
+                        "attaque_prochaine": "ébullition"
+                    }
+                    return
+    
+            elif type_attaque_recue == "vol":
+                millobelus = self.getPokemonParNom("millobelus")
+                if millobelus and not millobelus.estKO():
+                    self.action_retardee["ordi"] = {
+                        "action": "switch",
+                        "nouveau_pokemon": millobelus,
+                        "attaque_prochaine": "rayon glace"
+                    }
+                    return
+    
+        # Si aucun cas spécial, attaque aléatoire
+        capacites_disponibles = pokemon_actuel.getCapacites()
+        if capacites_disponibles:
+            capacite_choisie = random.choice(capacites_disponibles)
+            self.action_retardee["ordi"] = {"action": "attaquer", "capacite": capacite_choisie}
+        else:
+            # Fallback : attaque par défaut si aucune capacité trouvée
+            self.action_retardee["ordi"] = {"action": "attaquer", "capacite": "charge"}
+
+
     def augmenterStatsNiveau(self):
         """ Augmente les stats du Pokémon à chaque montée de niveau. """
         self.attaque += 2 #à moi meme, trouver les maths pour augmenter les stats
@@ -626,13 +720,22 @@ repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1)
 bombe_beurk = Capacite("Bombe Beurk", "Poison", "Spéciale", 10, 100, 90, 1)
 seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 
+
+# Dictionnaire nom -> objet Capacite
+CAPACITES = {
+    "Détricanon": detricanon,
+    "Repos": repos,
+    "Bombe Beurk": bombe_beurk,
+    "Séisme": seisme,
+    
+}
 # pour les EV et les stats : [HP, Attaque, Défense, Attaque Spé, Défense Spé, Vitesse]
-roserade = Pokemon("Roserade", "Plante" "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [detricanon, repos, bombe_beurk, seisme], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-carchacrok = Pokemon("Carchacrok", "Dragon" "Sol", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-dracolosse = Pokemon("Dracolosse", "Dragon" "Vol", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-avaltout5 = Pokemon("Avaltout5", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-avaltout6 = Pokemon("Avaltout6", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], ["Détricano", "Rest", "Sludge Bomb", "Séisme"], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+dracolosse = Pokemon("Dracolosse", "Dragon" "Vol", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+avaltout5 = Pokemon("Avaltout5", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+avaltout6 = Pokemon("Avaltout6", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
 combat = Combat(roserade, carchacrok, [roserade, milobellus, avaltout5], [carchacrok, dracolosse, avaltout6])
 #objet = Objets("objet", "joueur")
