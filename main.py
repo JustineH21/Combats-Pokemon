@@ -423,9 +423,13 @@ class Combat:
 
     
 
+    def getPokemonParNom(self, nom:str):
+    for p in self.equipes["ordi"]:
+        if p.getNom().lower() == nom.lower():
+            return p
+    return None
     
-
-    def choisir_action_IA(self, pokemon_actuel, type_attaque_recue):
+     def choisir_action_IA(self, pokemon_actuel, type_attaque_recue):
         """
         Choisit l'action à effectuer au prochain tour pour l'IA
         en fonction du type d'attaque subie et du Pokémon actuellement en jeu.
