@@ -82,7 +82,7 @@ class Pokemon:
             self.PV = self.stats[2]
 
 class Capacite:
-    def __init__(self, nom, type, classe, PP, probabilite, puissance, priorite, effet_attaque, valeur_effet):
+    def __init__(self, nom, type, classe, PP, probabilite, puissance, priorite, effet_attaque=None, valeur_effet=None):
         self.nom = nom
         self.type = type
         self.classe = classe
@@ -96,7 +96,7 @@ class Capacite:
     def utiliser_capacite(self, attaquant:Pokemon, cible:Pokemon):
         print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), self.nom))
 
-        if len(self.nom) == 3:  # Si attaque à effets
+        if self.effet_attaque != None and self.valeur_effet != None:  # Si attaque à effets
             if self.effet_attaque == 'attaque-e':
                 cible.setAttaque(-1 * self.valeur_effet)  #baisse attaque de la cible
                 print("L'attaque de {} diminue.".format(cible.getNom()))
