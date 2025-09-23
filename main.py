@@ -848,13 +848,15 @@ seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 ebullition = Capacite("Ébullition","Eau","Spéciale", 15, 80, 100, 1, statut="Brûlé", statut_chance=0.5)
 seisme = Capacite("Séisme","Sol","Spéciale", 10,100,100,1)
 # attention : pas défini
-ball_ombre = Capacite()
+ball_ombre = Capacite("Ball'Ombre","Spectre","Spéciale", 15,80,100,1)
 eclat_magique = Capacite("Éclat Magique","Fée","Spéciale",16,80,100,1)
 eco_sphere=Capacite("Éco-Sphère","Plante","Spéciale",10,90,100,1)
 soin=Capacite("Soin","Normal","Statut",5,0,0,1)
 voile_miroir= Capacite("Voile Miroir","Psy","Statut",20,0,100,1)
 laser_glace = Capacite("Laser Glace","Glace","Spéciale",10,90,100,1, statut="Gelé", statut_chance=0.3)
-
+draco_griffe = Capacite("Draco-Griffe","Dragon","Physique",15,80,100,1)
+danse_lame=Capacite("Danse Lames","Normal","Statut",20,0,0,1)
+direct toxik= Capacite("Direct Toxik","Poison","Physique",20,80,100,1, statut="Empoisonné", statut_chance=0.3)
 #nouveau
 # Dictionnaire nom -> objet Capacite
 CAPACITES = {
