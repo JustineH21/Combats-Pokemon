@@ -865,6 +865,10 @@ danse_lame=Capacite("Danse Lames","Normal","Statut",20,0,0,1)
 direct_toxik= Capacite("Direct Toxik","Poison","Physique",20,80,100,1, statut="Empoisonné", statut_chance=0.3)
 poing_feu=Capacite("Poing Feu","Feu","Physique",15,75,100,1, statut="Brûlure", statut_chance=0.1)
 dance_draco=Capacite("Dance Draco","Dragon","Statut",20,0,0,1)
+vent_violent=Capacite("Vent Violent","Vol","Spéciale",10,110,70,1)
+lame_feuille=Capacite("Lame Feuille","Plante","Spéciale", 15, 85, 100,1)
+aeropique=Capacite("Aéropique","Vol","Physique",20,60,100,1)
+lame_d_air=Capacite("Lame D'Air","Vol","Spéciale",15,75,95,1)
 
 #nouveau
 # Dictionnaire nom -> objet Capacite
@@ -908,8 +912,8 @@ STATUTS = {
 roserade = Pokemon("Roserade", ["Plante","Poison"], 60, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 65, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Draco-Griffe"], CAPACITES["Direct Toxik"], CAPACITES["Danse Lames"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 milobellus = Pokemon("Milobellus", "Eau", 62, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Ébullition"], CAPACITES["Voile Miroir"], CAPACITES["Laser Glace"], CAPACITES["Soin"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-dracolosse = Pokemon("Dracolosse", ["Dragon", "Vol"], 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-brindibou = Pokemon("Brindibou", "Plante", 60, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+dracolosse = Pokemon("Dracolosse", ["Dragon", "Vol"], 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Draco-Griffe"], CAPACITES["Poing Feu"], CAPACITES["Danse Draco"], CAPACITES["Vent Violent"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+brindibou = Pokemon("Brindibou", "Plante", 60, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Lame Feuille"], CAPACITES["Aéropique"], CAPACITES["Lame D'Air"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout = Pokemon("Avaltout", "Poison", 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
 combat = Combat(roserade, dracolosse, [roserade, milobellus, carchacrok], [brindibou, dracolosse, avaltout])
