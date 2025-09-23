@@ -215,10 +215,6 @@ class Capacite:
         
             return True
 
-
-    
-
-
 class Combat:
     def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee: dict):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
@@ -671,55 +667,55 @@ class Combat:
 
         while self.verifier_victoire == None:
             self.player = "joueur"
-            action_joueur = self.choisir_option_joueur()
+            self.choisir_option_joueur()
             self.player = "ordi"
-            action_ordi = self.choisir_option_ordi()
+            self.choisir_option_ordi()
             
-            if action_ordi[0] == 3 or action_joueur[0] == 3:
-                if action_ordi[0] == action_joueur[0]: # si les deux changent de Pokémon, on calcule la priorité
-                    if action_ordi[1].stats[5] == action_joueur[1].stats[5]:
+            if self.action_retardee["ordi"]["action"] == "switch" or self.action_retardee["joueur"]["action"] == "switch":
+                if self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"]: # si les deux changent de Pokémon, on calcule la priorité
+                    if self.action_retardee["ordi"]["nouveau_pokemon"].stats[5] == self.action_retardee["joueur"]["nouveau_pokemon"].stats[5]:
                         if random.randint(1, 2) == 1:
                             self.player = "ordi"
-                            self.changer_pokemon(action_ordi[1], "ordi")
+                            self.changer_pokemon(self.action_retardee["ordi"]["nouveau_pokemon"], "ordi")
                         else:
                             self.player = "joueur"
-                            self.changer_pokemon(action_joueur[1], "joueur")
-                    elif action_ordi[1].stats[5] < action_joueur[1].stats[5]:
+                            self.changer_pokemon(self.action_retardee["ordi"]["joueur"], "joueur")
+                    elif self.action_retardee["ordi"]["nouveau_pokemon"].stats[5] < self.action_retardee["joueur"]["nouveau_pokemon"].stats[5]:
                         self.player = "joueur"
-                        self.changer_pokemon(action_joueur[1], "joueur")
+                        self.changer_pokemon(self.action_retardee["ordi"]["nouveau_pokemon"], "joueur")
                     else:
                         self.player = "ordi"
-                        self.changer_pokemon(action_ordi[1], "ordi")
+                        self.changer_pokemon(self.action_retardee["ordi"]["nouveau_pokemon"], "ordi")
                 else: 
-                    if action_joueur[0] == 3:
+                    if self.action_retardee["joueur"]["action"] == "switch":
                         self.player = "joueur"
-                        self.changer_pokemon(action_joueur[1], "joueur")
+                        self.changer_pokemon(self.action_retardee["joueur"]["nouveau_pokemon"], "joueur")
                     else:
                         self.player = "ordi"
-                        self.changer_pokemon(action_ordi[1], "ordi")
+                        self.changer_pokemon(self.action_retardee["ordi"]["nouveau_pokemon"], "ordi")
             
-            if action_ordi[0] == 2 or action_joueur[0] == 2:
-                if (action_joueur[0] == action_ordi[0] and random.randint(1, 2) == 1) or action_joueur[0] == 2:
+            if self.action_retardee["ordi"]["action"] == "utiliser_objet" or self.action_retardee["ordi"]["action"] == "utiliser_objet":
+                if (self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"] and random.randint(1, 2) == 1) or self.action_retardee["joueur"]["action"] == "utiliser_objet":
                     if random.randint(1, 2) == 1:
                         self.player = "joueur"
-                        self.utiliser_objet(action_joueur[1])
+                        self.utiliser_objet(self.action_retardee["joueur"]["objet"])
                 else:
                     self.player = "ordi"
-                    self.utiliser_objet(action_ordi[1])
+                    self.utiliser_objet(self.action_retardee["ordi"]["objet"])
 
-            if action_ordi[0] == 1 or action_joueur[0] == 1:
-                if action_ordi[1].priorite > action_joueur[1].priorite:
+            if self.action_retardee["ordi"]["action"] == "attaque" or self.action_retardee["joueur"]["action"] == "attaque":
+                if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
                     self.player = "ordi"
-                    action_ordi[1].utiliser_capacite()
-                elif action_ordi[1].priorite < action_joueur[1].priorite:
+                    self.action_retardee["ordi"]["capacite"].utiliser_capacite()
+                elif self.action_retardee["ordi"]["capacite"].priorite < self.action_retardee["joueur"]["capacite"].priorite:
                     self.player = "joueur"
-                    action_joueur[1].utiliser_capacite()
-                elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]:
+                    self.action_retardee["joueur"]["capacite"].utiliser_capacite()
+                elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]: # si les capacités ont la même priorité, on compare les vitesses des Pokémon
                     self.player = "ordi"
-                    action_ordi[1].utiliser_capacite()
+                    self.action_retardee["ordi"]["capacite"].utiliser_capacite()
                 else:
                     self.player = "joueur"
-                    action_joueur[1].utiliser_capacite()
+                    self.action_retardee["joueur"]["capacite"].utiliser_capacite()
 
             for player in ["ordi", "joueur"]:
                 if self.pokemons_en_jeu[player].objet_tenu != None:
@@ -736,41 +732,37 @@ class Combat:
         else:
             print("L'ordinateur a gagné")
 
+    def appliquer_effets_statuts(self):
+        for joueur in ["joueur", "ordi"]:
+            pokemn = self.pokemons_en_jeu[joueur]
+            statut = pokemn.statut
 
+            if statut is None:
+                continue
 
+            effets = STATUTS[statut]
 
-def appliquer_effets_statuts(self):
-    for joueur in ["joueur", "ordi"]:
-        pokemn = self.pokemons_en_jeu[joueur]
-        statut = pokemn.statut
+            if effets["effet"] == "pv_perte":
+                perte = int(pokemn.stats[0] * effets["valeur"])
+                pokemn.PV -= perte
+                print(f"{pokemn.nom} souffre de {statut.lower()} et perd {perte} PV !")
+                if pokemn.PV < 0:
+                    pokemn.PV = 0
 
-        if statut is None:
-            continue
+            elif effets["effet"] == "chance_inactif":
+                pass  # traité au moment d'attaquer
 
-        effets = STATUTS[statut]
+            elif effets["effet"] == "inactif":
+                pokemn.statut_duree -= 1
+                if pokemn.statut_duree <= 0:
+                    print(f"{pokemn.nom} se réveille !")
+                    pokemn.statut = None
 
-        if effets["effet"] == "pv_perte":
-            perte = int(pokemn.stats[0] * effets["valeur"])
-            pokemn.PV -= perte
-            print(f"{pkmn.nom} souffre de {statut.lower()} et perd {perte} PV !")
-            if pokemn.PV < 0:
-                pokemn.PV = 0
-
-        elif effets["effet"] == "chance_inactif":
-            pass  # traité au moment d'attaquer
-
-        elif effets["effet"] == "inactif":
-            pokemn.statut_duree -= 1
-            if pokemn.statut_duree <= 0:
-                print(f"{pokemn.nom} se réveille !")
-                pokemn.statut = None
-
-        elif effets["effet"] == "inactif_prob":
-            if random.random() < effets["probabilite"]:
-                print(f"{pokemn.nom} se dégèle !")
-                pokemn.statut = None
-
-        
+            elif effets["effet"] == "inactif_prob":
+                if random.random() < effets["probabilite"]:
+                    print(f"{pokemn.nom} se dégèle !")
+                    pokemn.statut = None
+     
 class Objets:
     def __init__(self, nom, objet_type=None, info=None):
         self.nom = nom
@@ -856,7 +848,8 @@ voile_miroir= Capacite("Voile Miroir","Psy","Statut",20,0,100,1)
 laser_glace = Capacite("Laser Glace","Glace","Spéciale",10,90,100,1, statut="Gelé", statut_chance=0.3)
 draco_griffe = Capacite("Draco-Griffe","Dragon","Physique",15,80,100,1)
 danse_lame=Capacite("Danse Lames","Normal","Statut",20,0,0,1)
-direct toxik= Capacite("Direct Toxik","Poison","Physique",20,80,100,1, statut="Empoisonné", statut_chance=0.3)
+direct_toxik= Capacite("Direct Toxik","Poison","Physique",20,80,100,1, statut="Empoisonné", statut_chance=0.3)
+
 #nouveau
 # Dictionnaire nom -> objet Capacite
 CAPACITES = {
@@ -896,7 +889,7 @@ STATUTS = {
 }
 
 # pour les EV et les stats : [HP, Attaque, Défense, Attaque Spé, Défense Spé, Vitesse]
-roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 dracolosse = Pokemon("Dracolosse", ["Dragon" "Vol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
