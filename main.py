@@ -383,9 +383,6 @@ class Combat:
                 
         return self.listes_objet[self.player][choix - 1][1] # renvoie l'objet choisi (pas son nom)
 
-    def utiliser_objet(self, objet, pokemon_qui_utilise:Pokemon):
-        objet.utiliser_objet(pokemon_qui_utilise)
-
     def choisir_pokemon_a_mettre_en_jeu_ordi(self, liste, rea = False):
         """ Choisit le meilleur Pokémon à mettre en jeu à partir de la liste """
         if len(liste) > 1:
@@ -742,10 +739,10 @@ class Combat:
                     # si les deux utilisent un objet, et que le joueur est tiré au sort, ou si c'est seulement le joueur qui utilise un objet
                     if random.randint(1, 2) == 1:
                         self.player = "joueur"
-                        self.utiliser_objet(self.action_retardee["joueur"]["objet"], self.action_retardee["joueur"]["pokemon"])
+                        self.action_retardee["joueur"]["objet"].utiliser_objet(self.action_retardee["joueur"]["pokemon"])
                 else:
                     self.player = "ordi"
-                    self.utiliser_objet(self.action_retardee["ordi"]["objet"], self.action_retardee["ordi"]["pokemon"])
+                    self.action_retardee["ordi"]["objet"].utiliser_objet(self.action_retardee["ordi"]["pokemon"])
 
             if self.action_retardee["ordi"]["action"] == "attaque" or self.action_retardee["joueur"]["action"] == "attaque":
                 if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
