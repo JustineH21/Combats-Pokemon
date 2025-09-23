@@ -111,6 +111,7 @@ class Capacite:
         self.nom = nom
         self.type = type
         self.classe = classe
+        self.PP_initial = PP
         self.PP = PP
         self.probabilite = probabilite
         self.puissance = puissance
@@ -279,7 +280,7 @@ class Combat:
         """ Demande au joueur de choisir une des capacités du Pokémon en jeu et renvoie le nom de la capacité choisie """
         for i in range(4): # car chaque Pokémon a 4 capacités
             print(i+1, ":", pokemon.capacites[i])
-        choix = self.choisir_nombre("Numéro de l'attaque à effectuer : ", 1, 4)
+        choix = self.choisir_nombre("Numéro de la capacité choisie : ", 1, 4)
         return pokemon.capacites[choix - 1]
     
     def choisir_objet(self, type = None):
@@ -300,6 +301,9 @@ class Combat:
             for i in range(len(liste)):
                 print(i+1, ":", liste[i].getNom(), "(PV :", liste[i].getPV(), ")")
             pokemon = liste[self.choisir_nombre("Numéro du Pokémon à soigner : ", 1, len(liste))]
+
+            if "Huile" in objet.nom: # si on utilise une huile, il faut choisir la capacité à booster
+                self.action_retardee["joueur"] = {"action": "utiliser_objet", "objet": objet, "pokemon": pokemon, "capacite": self.choisir_capacite(pokemon)}
             self.action_retardee["joueur"] = {"action": "utiliser_objet", "objet": objet, "pokemon": pokemon}
         else:
             objet = None
@@ -671,7 +675,9 @@ class Combat:
                 pokemon.etat = None
                 pokemon.objet_tenu = None
                 pokemon.statut = None  
-                pokemon.statut_duree = 0  
+                pokemon.statut_duree = 0
+                for capacite in pokemon.capacites:
+                    capacite.PP = capacite.PP_max
 
         nb = {"joueur":random.randint(1, 3), "ordi": random.randint(1, 3)}
         self.player = "joueur"
@@ -745,15 +751,19 @@ class Combat:
                 if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
                     self.player = "ordi"
                     self.action_retardee["ordi"]["capacite"].utiliser_capacite()
+                    self.action_retardee["ordi"]["capacite"].PP -= 1
                 elif self.action_retardee["ordi"]["capacite"].priorite < self.action_retardee["joueur"]["capacite"].priorite:
                     self.player = "joueur"
                     self.action_retardee["joueur"]["capacite"].utiliser_capacite()
+                    self.action_retardee["joueur"]["capacite"].PP -= 1
                 elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]: # si les capacités ont la même priorité, on compare les vitesses des Pokémon
                     self.player = "ordi"
                     self.action_retardee["ordi"]["capacite"].utiliser_capacite()
+                    self.action_retardee["ordi"]["capacite"].PP -= 1
                 else:
                     self.player = "joueur"
                     self.action_retardee["joueur"]["capacite"].utiliser_capacite()
+                    self.action_retardee["joueur"]["capacite"].PP -= 1
                 
                 # si on avait défini une attaque à faire au prochain tour en changeant de Pokémon, on enregistre directement le changement
                 if len(self.action_retardee["ordi"]) == 3:
@@ -847,7 +857,6 @@ class Combat:
             if self.choisir_nombre("", 1, 2) == 1:
                 self.faire_un_combat()
 
-
     def appliquer_effets_statuts(self):
         for joueur in ["joueur", "ordi"]:
             pokemn = self.pokemons_en_jeu[joueur]
@@ -934,8 +943,26 @@ class Objets:
             elif self.nom == "Élixir Max":
                 PP_a_ajouter = ["toutes", "max"]    
 
-            capacite = combat.choisir_capacite(pokemon_utilisateur)
-            pokemon_utilisateur.capacites[capacite]["PP"] += PP_a_ajouter[1]
+            if PP_a_ajouter[0] == "une":
+                capacite = combat.action_retardee[combat.player]["capacite"] # on récupère la capacité à "soigner"
+                if PP_a_ajouter[1] == "max":
+                    pokemon_utilisateur.capacites[capacite].PP = pokemon_utilisateur.capacites[capacite].PP_max
+                else:
+                    PP_max_a_ajouter = pokemon_utilisateur.capacites[capacite].PP_max - pokemon_utilisateur.capacites[capacite].PP # calcule le nombre max de PP qu'on peut rajouter à la capacité
+                    if PP_a_ajouter[1] > PP_max_a_ajouter:
+                        pokemon_utilisateur.capacites[capacite].PP = pokemon_utilisateur.capacites[capacite].PP_max
+                    else:
+                        pokemon_utilisateur.capacites[capacite].PP += PP_a_ajouter[1]
+            else:
+                for capacite in pokemon_utilisateur.capacites:
+                    if PP_a_ajouter[1] == "max":
+                        pokemon_utilisateur.capacites[capacite].PP = pokemon_utilisateur.capacites[capacite].PP_max
+                    else:
+                        PP_max_a_ajouter = pokemon_utilisateur.capacites[capacite].PP_max - pokemon_utilisateur.capacites[capacite].PP # calcule le nombre max de PP qu'on peut rajouter à la capacité
+                        if PP_a_ajouter[1] > PP_max_a_ajouter:
+                            pokemon_utilisateur.capacites[capacite].PP = pokemon_utilisateur.capacites[capacite].PP_max
+                        else:
+                            pokemon_utilisateur.capacites[capacite].PP += PP_a_ajouter[1]
 
         elif self.objet_type == "Statut":
             pokemon_utilisateur.statut = None
