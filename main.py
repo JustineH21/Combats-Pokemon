@@ -849,7 +849,7 @@ class Objets:
 
 # Création des capacités : nom, type, classe, PP, probabilité, puissance, priorité , statut, chance_statut
 detricanon = Capacite("Détricanon", "Poison", "Physique", 5, 80, 120, 1)
-repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1, statut="Endormi", statut_chance=1)
+repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1, statut="Sommeil", statut_chance=1)
 bombe_beurk = Capacite("Bombe Beurk", "Poison", "Spéciale", 10, 100, 90, 1, statut="Empoisonné", statut_chance=0.3)
 seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 ebullition = Capacite("Ébullition","Eau","Spéciale", 15, 80, 100, 1, statut="Brûlé", statut_chance=0.5)
