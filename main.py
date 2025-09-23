@@ -279,7 +279,14 @@ class Combat:
                 print(i+1, ":", self.listes_objet[self.player][i][0]) # affiche le nom de l'objet
             choix = self.choisir_nombre("Numéro de l'objet à utiliser : ", 1, len(self.listes_objet[self.player]))
             objet = self.listes_objet[self.player][choix - 1][1]
-            self.action_retardee["joueur"] = {"action": "utiliser_objet", "objet": objet}
+            liste = []
+            for pokemon in self.equipes["joueur"]:
+                if pokemon.PV > 0 or objet.objet_type == "Réanimation": # on ne peut pas soigner un Pokémon KO, on ne peut que le réanimer
+                    liste.append(pokemon)
+            for i in range(len(liste)):
+                print(i+1, ":", liste[i].getNom(), "(PV :", liste[i].getPV(), ")")
+            pokemon = liste[self.choisir_nombre("Numéro du Pokémon à soigner : ", 1, len(liste))]
+            self.action_retardee["joueur"] = {"action": "utiliser_objet", "objet": objet, "pokemon": pokemon}
         else:
             objet = None
             if type == "PV":
@@ -350,14 +357,16 @@ class Combat:
                 
             if objet == None:
                 return False
+            elif type == "Réanimation":
+                self.action_retardee["ordi"] = {"action": "utiliser_objet", "objet": objet} # on mettra le Pokémon après car ce n'est pas forcément le Pokémon en jeu
             else:
-                self.action_retardee["ordi"] = {"action": "utiliser_objet", "objet": objet}
+                self.action_retardee["ordi"] = {"action": "utiliser_objet", "objet": objet, "pokemon": self.pokemons_en_jeu["ordi"]}
                 return True
                 
         return self.listes_objet[self.player][choix - 1][1] # renvoie l'objet choisi (pas son nom)
 
-    def utiliser_objet(self, objet):
-        objet.utiliser_objet()
+    def utiliser_objet(self, objet, pokemon_qui_utilise:Pokemon):
+        objet.utiliser_objet(pokemon_qui_utilise)
 
     def choisir_pokemon_a_mettre_en_jeu_ordi(self, liste, rea = False):
         """ Choisit le meilleur Pokémon à mettre en jeu à partir de la liste """
@@ -434,7 +443,7 @@ class Combat:
             i = 0
             while i < len(pokemons_vivants):
                 pokemon = pokemons_vivants[i]
-                print(str(i + 1) + ". " + pokemon.getNom() + " (PV : " + str(pokemon.getHP()) + ")")
+                print(str(i + 1) + ". " + pokemon.getNom() + " (PV : " + str(pokemon.getPV()) + ")")
                 i += 1
             choix2 = pokemons_vivants[self.choisir_nombre("Numéro du Pokémon à envoyer : ", 1, len(pokemons_vivants) + 1)]
             self.action_retardee["joueur"] = {"action": "switch", "nouveau_pokemon": choix2}
@@ -469,7 +478,7 @@ class Combat:
                 for pokemon in self.equipes["ordi"]:
                     if pokemon.PV == 0:
                         liste.append(pokemon)
-                self.choisir_pokemon_a_mettre_en_jeu_ordi(liste, rea = True)
+                self.action_retardee["ordi"]["pokemon"] = self.choisir_pokemon_a_mettre_en_jeu_ordi(liste, rea = True) # on choisit le Pokémon à réanimer
                 option2 = action_faite
             elif pokemon.est_desavantage_type(ennemi) and option3 == True: # si l'ennemi est efficace contre le Pokémon
                 liste = []
@@ -593,29 +602,30 @@ class Combat:
             self.action_retardee["ordi"] = {"action": "attaquer", "capacite": "charge"}
             return True
 
-    def augmenterStatsNiveau(self):
+    def augmenterStatsNiveau(self, gagnant:Pokemon):
         """ Augmente les stats du Pokémon à chaque montée de niveau. """
-        self.attaque += 2 #à moi meme, trouver les maths pour augmenter les stats
-        self.defense += 2
-        self.vies += 5  # Il récupère aussi des PV quand le pokemon gagne des niveaux 
-        print(f"{self.nom} bravo, votre pokemon s'améliore ! ATQ: {self.attaque}, DEF: {self.defense}, PV: {self.HP}")
+        gagnant.attaque += 2 
+        gagnant.defense += 2
+        gagnant.stats[0] += 5  # Il récupère aussi des PV quand le pokemon gagne des niveaux 
+        print(f"{gagnant.nom} bravo, votre pokemon s'améliore ! ATQ: {gagnant.attaque}, DEF: {gagnant.defense}, PV: {gagnant.PV}")
 
-    def gagnerExp(self, nb):
+    def gagnerExp(self, nb, gagnant:Pokemon):
         """ Ajoute des points d'expérience au Pokémon et gère les montées de niveau. """
-        self.xp += nb
-        print(f"{self.nom} gagne {nb} XP !")
+        gagnant.xp += nb
+        print(f"{gagnant.nom} gagne {nb} XP !")
 
         # Tant que le pokémon a assez d'XP pour monter de niveau
-        while self.xp >= self.xp_max:
-            self.xp -= self.xp_max
-            self.niveau += 1
-            print(f"{self.nom} monte au niveau {self.niveau} !")
-            self.xp_max = int(self.xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
-            self.augmenterStatsNiveau()
+        while gagnant.xp >= gagnant.xp_max:
+            gagnant.xp -= gagnant.xp_max
+            gagnant.niveau += 1
+            print(f"{gagnant.nom} monte au niveau {gagnant.niveau} !")
+            gagnant.xp_max = int(gagnant.xp_max * 1.2)  # XP à atteindre augmente à chaque niveau
+            self.augmenterStatsNiveau(gagnant)
 
-    def gagner_Exp_Selon_Lvl(self, cible):
+    def gagner_Exp_Selon_Lvl(self, gagnant:Pokemon, cible:Pokemon):
+        """ Calcule le nombre d'XP gagné en fonction du niveau de la cible vaincue et l'ajoute au Pokémon """
         xp_gagnee = 20 + (cible.getNiveau() * 5)
-        self.gagnerExperience(xp_gagnee)
+        self.gagnerExp(xp_gagnee, gagnant)
 
     def verifier_victoire(self):
         """ Fonction qui vérifie qu'aucun des joueurs n'a gagné, renvoie "égalité" si les deux joueurs ont perdu, "joueur" s'il a gagné, "ordi" s'il a gagné, ou None si le combat n'est pas fini """
@@ -698,12 +708,13 @@ class Combat:
             
             if self.action_retardee["ordi"]["action"] == "utiliser_objet" or self.action_retardee["ordi"]["action"] == "utiliser_objet":
                 if (self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"] and random.randint(1, 2) == 1) or self.action_retardee["joueur"]["action"] == "utiliser_objet":
+                    # si les deux utilisent un objet, et que le joueur est tiré au sort, ou si c'est seulement le joueur qui utilise un objet
                     if random.randint(1, 2) == 1:
                         self.player = "joueur"
-                        self.utiliser_objet(self.action_retardee["joueur"]["objet"])
+                        self.utiliser_objet(self.action_retardee["joueur"]["objet"], self.action_retardee["joueur"]["pokemon"])
                 else:
                     self.player = "ordi"
-                    self.utiliser_objet(self.action_retardee["ordi"]["objet"])
+                    self.utiliser_objet(self.action_retardee["ordi"]["objet"], self.action_retardee["ordi"]["pokemon"])
 
             if self.action_retardee["ordi"]["action"] == "attaque" or self.action_retardee["joueur"]["action"] == "attaque":
                 if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
@@ -725,7 +736,7 @@ class Combat:
                     self.action_retardee["ordi"]["capacite"] = self.action_retardee["ordi"]["attaque_prochaine"]
                 else:
                     self.action_retardee["ordi"] = None
-                    
+
                 if len(self.action_retardee["joueur"]) == 3:
                     self.action_retardee["joueur"]["action"] = "attaquer"
                     self.action_retardee["joueur"]["capacite"] = self.action_retardee["joueur"]["attaque_prochaine"]
@@ -739,6 +750,25 @@ class Combat:
                         self.pokemons_en_jeu[player].objet_tenu.utiliser_objet_tenu(self.pokemons_en_jeu[player])
                     elif self.pokemons_en_jeu[player].objet_tenu.nom == "Restes":
                         self.pokemons_en_jeu[player].objet_tenu.utiliser_objet_tenu(self.pokemons_en_jeu[player])
+
+            for player in ["joueur", "ordi"]:
+                if self.pokemons_en_jeu[player].PV == 0:
+                    print(self.pokemons_en_jeu[player].nom, " est KO !")
+                    liste = self.liste_pokemons_vivants_pas_en_jeu()
+                    if len(liste) > 0:
+                        if player == "joueur":
+                            print("Choisissez un nouveau Pokémon à envoyer au combat.")
+                            for i in range(len(liste)):
+                                print(i+1, ". ", liste[i])
+                            choix = liste[self.choisir_nombre("Numéro du Pokémon à envoyer : ", 1, len(liste))]
+                            self.changer_pokemon(choix, player)
+                        else:
+                            action_retard = self.action_retardee["ordi"] # copie de la valeur pour la sauvegarder
+                            self.choisir_pokemon_a_mettre_en_jeu_ordi(liste)
+                            self.changer_pokemon(self.action_retardee["ordi"]["nouveau_pokemon"], "ordi")
+                            self.action_retardee["ordi"] = action_retard
+                    else:
+                        print(player, " n'a plus de Pokémon en vie !")
             
         if self.verifier_victoire == "égalité":
             print("Il y a eu égalité")
@@ -746,6 +776,52 @@ class Combat:
             print("Le joueur a gagné")
         else:
             print("L'ordinateur a gagné")
+
+    def finir_combat(self):
+        print("Le combat est terminé.")
+        if self.verifier_victoire() == "joueur":
+            self.gagner_Exp_Selon_Lvl(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+        else:
+            self.gagner_Exp_Selon_Lvl(self.pokemons_en_jeu["ordi"], self.pokemons_en_jeu["joueur"])
+        if self.verifier_victoire() != "égalité": # calcule aléatoirement une récompense seulement s'il y a un gagnant
+            recompense = random.randint(1, 58)
+            if recompense == 1:
+                objet = self.ajouter_objet("Potion Max", "Soins", self.verifier_victoire(), "max")
+            elif recompense == 2:
+                objet = self.ajouter_objet("Rappel Max", "Réanimation", self.verifier_victoire())
+            elif recompense == 3:
+                objet = self.ajouter_objet("Élixir Max", "PPS", self.verifier_victoire())
+            elif recompense == 4:
+                objet = self.ajouter_objet("Total Soin", "Statut", self.verifier_victoire())
+            elif recompense == 5 or recompense == 6:
+                objet = self.ajouter_objet("Hyper Potion", "Soins", self.verifier_victoire(), 200)
+            elif recompense >= 7 and recompense <= 11:
+                objet = self.ajouter_objet("Super Potion", "Soins", self.verifier_victoire(), 50)
+            elif recompense >= 12 and recompense <= 22:
+                objet = self.ajouter_objet("Potion", "Soins", self.verifier_victoire(), 20)
+            elif recompense >= 23 and recompense <= 27:
+                objet = self.ajouter_objet("Rappel", "Réanimation", self.verifier_victoire())
+            elif recompense >= 28 and recompense <= 32:
+                objet = self.ajouter_objet("Élixir", "PPS", self.verifier_victoire())
+            elif recompense >= 33 and recompense <= 43:
+                objet = self.ajouter_objet("Huile", "PPS", self.verifier_victoire())
+            elif recompense >= 44 and recompense <= 48:
+                objet = self.ajouter_objet("Huile Max", "PPS", self.verifier_victoire())
+            elif recompense == 49 or recompense == 50:
+                objet = self.ajouter_objet("Antidote", "Statut", self.verifier_victoire(), "Empoisonnement")
+            elif recompense == 51 or recompense == 52:
+                objet = self.ajouter_objet("Anti-Brûle", "Statut", self.verifier_victoire(), "Brûlure")
+            elif recompense == 53 or recompense == 54:
+                objet = self.ajouter_objet("Anti-Para", "Statut", self.verifier_victoire(), "Paralysie")
+            elif recompense == 55 or recompense == 56:
+                objet = self.ajouter_objet("Réveil", "Statut", self.verifier_victoire(), "Sommeil")
+            elif recompense == 57 or recompense == 58:
+                objet = self.ajouter_objet("Antigel", "Statut", self.verifier_victoire(), "Gel")
+            print("Vous avez reçu un objet :", objet.nom)
+            print("Voulez-vous refaire un combat ? (1 : oui, 2 : non)")
+            if self.choisir_nombre("", 1, 2) == 1:
+                self.faire_un_combat()
+
 
     def appliquer_effets_statuts(self):
         for joueur in ["joueur", "ordi"]:
@@ -795,7 +871,7 @@ class Objets:
         if pokemon.PV > pokemon.stats[0]:
             pokemon.PV = pokemon.stats[0] # pour pas avoir plus de PV que ceux de base
 
-    def utiliser_objet(self):
+    def utiliser_objet(self, pokemon_utilisateur:Pokemon):
         """
         Retire l'objet utilisé de la liste des objets et effectue l'action liée à cet objet
         """
@@ -807,31 +883,21 @@ class Objets:
         combat.listes_objet[combat.player][1].quantite -= 1
 
         if self.objet_type == "Soins":
-            pokemon_choisi = combat.choisir_pokemon()
             if self.info == "max":
-                PV_a_rajouter = pokemon_choisi.stats[0]
+                PV_a_rajouter = pokemon_utilisateur.stats[0]
             else:
                 PV_a_rajouter = self.info
             
-            PV_max_a_rajouter = pokemon_choisi.stats[0] - pokemon_choisi.PV # calcule le nombre max de PV qu'on peut rajouter au Pokémon
+            PV_max_a_rajouter = pokemon_utilisateur.stats[0] - pokemon_utilisateur.PV # calcule le nombre max de PV qu'on peut rajouter au Pokémon
             if PV_a_rajouter >= PV_max_a_rajouter:
-                pokemon_choisi.PV = pokemon_choisi.stats[0]
+                pokemon_utilisateur.PV = pokemon_utilisateur.stats[0]
             else:
-                pokemon_choisi.PV += PV_a_rajouter
+                pokemon_utilisateur.PV += PV_a_rajouter
 
         elif self.objet_type == "Réanimation":
-            if combat.player == "joueur":
-                liste = []
-                for pokemon in combat.equipes["joueur"]:
-                    if pokemon.PV == 0:
-                        liste.append(pokemon)
-                        print("{}. {}".format(len(liste), pokemon.nom))
-                pokemon_choisi = combat.choisir_nombre("Numéro du Pokémon à réanimer : ", 1, len(liste))
-            else:
-                pass
-            pokemon_choisi.PV = pokemon_choisi.stats[0]
+            pokemon_utilisateur.PV = pokemon_utilisateur.stats[0]
             if self.nom == "Rappel":
-                pokemon_choisi.PV = pokemon_choisi.PV / 2 # si c'est un rappel simple, ça ne réanime qu'avec la moitié des PV
+                pokemon_utilisateur.PV = pokemon_utilisateur.PV / 2 # si c'est un rappel simple, ça ne réanime qu'avec la moitié des PV
 
         elif self.objet_type == "PPS":
             if self.nom == "Huile":
@@ -843,9 +909,12 @@ class Objets:
             elif self.nom == "Élixir Max":
                 PP_a_ajouter = ["toutes", "max"]    
 
-            pokemon = combat.choisir_pokemon()
-            capacite = combat.choisir_capacite(pokemon)
-            pokemon.capacites[capacite]["PP"] += PP_a_ajouter[1]
+            capacite = combat.choisir_capacite(pokemon_utilisateur)
+            pokemon_utilisateur.capacites[capacite]["PP"] += PP_a_ajouter[1]
+
+        elif self.objet_type == "Statut":
+            pokemon_utilisateur.statut = None
+            pokemon_utilisateur.statut_duree = 0
 
 # Création des capacités : nom, type, classe, PP, probabilité, puissance, priorité , statut, chance_statut
 detricanon = Capacite("Détricanon", "Poison", "Physique", 5, 80, 120, 1)
@@ -853,7 +922,6 @@ repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1, statut="Sommeil", statut_
 bombe_beurk = Capacite("Bombe Beurk", "Poison", "Spéciale", 10, 100, 90, 1, statut="Empoisonné", statut_chance=0.3)
 seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 ebullition = Capacite("Ébullition","Eau","Spéciale", 15, 80, 100, 1, statut="Brûlé", statut_chance=0.5)
-# attention : pas défini
 ball_ombre = Capacite("Ball'Ombre","Spectre","Spéciale", 15,80,100,1)
 eclat_magique = Capacite("Éclat Magique","Fée","Spéciale",16,80,100,1)
 eco_sphere=Capacite("Éco-Sphère","Plante","Spéciale",10,90,100,1)
