@@ -20,11 +20,25 @@ class Pokemon:
         self.attaque = self.getAttaque()
         self.defense = self.getDefense()
         self.etat = None # pas de problème de statut pour le moment, après, dictionnaire : {"nom_etat": "...", "duree_etat": ...}
-        self.orientation = None
-        self.role = None
+        self.orientation = self.definir_role_orientation()[0] # Physique ou None
+        self.role = self.definir_role_orientation()[1] # Tank, Sweeper ou None
         self.objet_tenu = None
         self.statut = None  
         self.statut_duree = 0  
+
+    def definir_role_orientation(self):
+        """ Définit le rôle (tank, weeper ou rien) et l'orientation (physique ou rien) du Pokémon """
+        role = None
+        orientation = None
+        if self.stats[-1] > 100 and (self.stats[1] > self.stats[2] or self.stats[3] > self.stats[4]): # si PV>100 et attaque>defense ou attaque spéciale>def spéciale
+            role = "Sweeper"
+        elif self.stats[0] > 100 and (self.stats[2] > self.stats[1] or self.stats[4] > self.stats[3]): # si PV>100 et defense>attaque ou def spéciale > attaque spéciale
+            role = "Tank"
+        if self.stats[1] > self.stats[3]: # si attaque physique > attaque spéciale
+            orientation = "Physique"
+        
+        return [orientation, role]
+        
 
     def est_desavantage_type(self, ennemi):
         """ Renvoie True si le Pokémon est désaventagé par rapport au type du Pokémon ennemi, False sinon """
@@ -648,6 +662,17 @@ class Combat:
             return None
 
     def faire_un_combat(self):
+        # réinitialisation des infos des Pokémon
+        for equipe in self.equipes:
+            for pokemon in self.equipes[equipe]:
+                pokemon.PV = pokemon.getPV()
+                pokemon.attaque = pokemon.getAttaque()
+                pokemon.defense = pokemon.getDefense()
+                pokemon.etat = None
+                pokemon.objet_tenu = None
+                pokemon.statut = None  
+                pokemon.statut_duree = 0  
+
         nb = {"joueur":random.randint(1, 3), "ordi": random.randint(1, 3)}
         self.player = "joueur"
         if nb["joueur"] == 1:
@@ -985,4 +1010,4 @@ brindibou = Pokemon("Brindibou", "Plante", 60, [100, 73, 83, 73, 83, 55], [207, 
 avaltout = Pokemon("Avaltout", "Poison", 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
 combat = Combat(roserade, dracolosse, [roserade, milobellus, carchacrok], [brindibou, dracolosse, avaltout])
-#objet = Objets("objet", "joueur")
+combat.faire_un_combat()
