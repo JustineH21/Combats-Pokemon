@@ -864,6 +864,8 @@ laser_glace = Capacite("Laser Glace","Glace","Spéciale",10,90,100,1, statut="Ge
 draco_griffe = Capacite("Draco-Griffe","Dragon","Physique",15,80,100,1)
 danse_lame=Capacite("Danse Lames","Normal","Statut",20,0,0,1)
 direct_toxik= Capacite("Direct Toxik","Poison","Physique",20,80,100,1, statut="Empoisonné", statut_chance=0.3)
+poing_feu=Capacite("Poing Feu","Feu","Physique",15,75,100,1, statut="Brûlure", statut_chance=0.1)
+dance_draco=Capacite("Dance Draco","Dragon","Statut",20,0,0,1)
 
 #nouveau
 # Dictionnaire nom -> objet Capacite
@@ -904,12 +906,12 @@ STATUTS = {
 }
 
 # pour les EV et les stats : [HP, Attaque, Défense, Attaque Spé, Défense Spé, Vitesse]
-roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-dracolosse = Pokemon("Dracolosse", ["Dragon" "Vol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-avaltout5 = Pokemon("Brindibou", "Plante", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-avaltout6 = Pokemon("Avaltout", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], capacites_noms(["Detricanon", "Repos", "Bombe Beurk", "Séisme"]), {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+dracolosse = Pokemon("Dracolosse", ["Dragon" "Vol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+brindibou = Pokemon("Brindibou", "Plante", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+avaltout = Pokemon("Avaltout", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
-combat = Combat(roserade, carchacrok, [roserade, milobellus, avaltout5], [carchacrok, dracolosse, avaltout6])
+combat = Combat(roserade, dracolosse, [roserade, milobellus, carchacrok], [brindibou, dracolosse, avaltout])
 #objet = Objets("objet", "joueur")
