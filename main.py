@@ -705,7 +705,7 @@ class Combat:
         
         self.action_retardee = {"joueur": None, "ordi": None}
 
-        while self.verifier_victoire == None:
+        while self.verifier_victoire() == None:
             self.player = "joueur"
             self.choisir_option_joueur()
             self.player = "ordi"
