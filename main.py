@@ -664,6 +664,8 @@ class Combat:
                 choix[player].objet_tenu = Objets("Restes")
             else:
                 choix[player].objet_tenu = Objets("Casque Brut")
+        
+        self.action_retardee = {"joueur": None, "ordi": None}
 
         while self.verifier_victoire == None:
             self.player = "joueur"
@@ -716,6 +718,19 @@ class Combat:
                 else:
                     self.player = "joueur"
                     self.action_retardee["joueur"]["capacite"].utiliser_capacite()
+                
+                # si on avait défini une attaque à faire au prochain tour en changeant de Pokémon, on enregistre directement le changement
+                if len(self.action_retardee["ordi"]) == 3:
+                    self.action_retardee["ordi"]["action"] = "attaquer"
+                    self.action_retardee["ordi"]["capacite"] = self.action_retardee["ordi"]["attaque_prochaine"]
+                else:
+                    self.action_retardee["ordi"] = None
+                    
+                if len(self.action_retardee["joueur"]) == 3:
+                    self.action_retardee["joueur"]["action"] = "attaquer"
+                    self.action_retardee["joueur"]["capacite"] = self.action_retardee["joueur"]["attaque_prochaine"]
+                else:
+                    self.action_retardee["joueur"] = None
 
             for player in ["ordi", "joueur"]:
                 if self.pokemons_en_jeu[player].objet_tenu != None:
