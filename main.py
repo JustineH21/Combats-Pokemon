@@ -853,7 +853,6 @@ repos = Capacite("Repos", "Psy", "Statut", 5, 0, 0, 1, statut="Endormi", statut_
 bombe_beurk = Capacite("Bombe Beurk", "Poison", "Spéciale", 10, 100, 90, 1, statut="Empoisonné", statut_chance=0.3)
 seisme = Capacite("Séisme", "Sol", "Physique", 10, 100, 100, 1)
 ebullition = Capacite("Ébullition","Eau","Spéciale", 15, 80, 100, 1, statut="Brûlé", statut_chance=0.5)
-seisme = Capacite("Séisme","Sol","Spéciale", 10,100,100,1)
 # attention : pas défini
 ball_ombre = Capacite("Ball'Ombre","Spectre","Spéciale", 15,80,100,1)
 eclat_magique = Capacite("Éclat Magique","Fée","Spéciale",16,80,100,1)
@@ -907,8 +906,8 @@ STATUTS = {
 
 # pour les EV et les stats : [HP, Attaque, Défense, Attaque Spé, Défense Spé, Vitesse]
 roserade = Pokemon("Roserade", ["Plante","Poison"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
-milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Draco-Griffe"], CAPACITES["Direct Toxik"], CAPACITES["Danse Lames"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+milobellus = Pokemon("Milobellus", "Eau", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Ébullition"], CAPACITES["Voile Miroir"], CAPACITES["Laser Glace"], CAPACITES["Soin"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 dracolosse = Pokemon("Dracolosse", ["Dragon" "Vol"], 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 brindibou = Pokemon("Brindibou", "Plante", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107],  [CAPACITES["Éclat Magique"], CAPACITES["Ball'Ombre"], CAPACITES["Bombe Beurk"], CAPACITES["Éco-Sphère"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 avaltout = Pokemon("Avaltout", "Poison", 50, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
