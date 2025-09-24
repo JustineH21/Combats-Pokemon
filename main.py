@@ -6,10 +6,10 @@ class Error(Exception):
         self.message = msg
 
 class Pokemon:
-    def __init__(self, nom:str, pokemon_type, EV:list, stats:list, capacites:list, sensibilites:dict):
+    def __init__(self, nom:str, pokemon_type, niveau: int, EV:list, stats:list, capacites:list, sensibilites:dict):
         self.nom = nom
         self.type = pokemon_type
-        self.niveau = 1
+        self.niveau = niveau
         self.xp = 0
         self.xp_max = 100 # xp nécessaires pour monter au prochain niveau
         self.EV = EV
@@ -233,7 +233,7 @@ class Capacite:
         return True
 
 class Combat:
-    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee: dict):
+    def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list):
         self.pokemons_en_jeu = {"joueur": premier_pokemon_a_jouer_joueur, "ordi":premier_pokemon_a_jouer_ordi}
         self.equipes = {"joueur": equipe_joueur, "ordi": equipe_ordi}
         self.player = "joueur" # pour l'instant, le premier à jouer est le joueur
@@ -1010,7 +1010,9 @@ CAPACITES = {
     "Vent Violent":vent_violent,
     "Lame Feuille":lame_feuille,
     "Aéropique":aeropique,
-    "Lame D'Air":lame_d_air
+    "Lame D'Air":lame_d_air, 
+    "Voile Miroir":voile_miroir, 
+    "Danse Draco":dance_draco
 }
 
 #nouveau
@@ -1047,7 +1049,7 @@ carchacrok = Pokemon("Carchacrok", ["Dragon" , "Sol"], 65, [108, 130, 95, 80, 85
 milobellus = Pokemon("Milobellus", "Eau", 62, [95, 60, 79, 100, 125, 81], [248, 150, 177, 205, 239, 179],  [CAPACITES["Ébullition"], CAPACITES["Voile Miroir"], CAPACITES["Laser Glace"], CAPACITES["Soin"]], {"Électrique":2, "Acier": 0.5, "Glace": 0.5, "Plante": 2, "Feu": 0.5, "Eau": 0.5})
 dracolosse = Pokemon("Dracolosse", ["Dragon", "Vol"], 55, [91, 134, 95, 100, 100, 80], [216, 204, 161, 166, 166, 144],  [CAPACITES["Draco-Griffe"], CAPACITES["Poing Feu"], CAPACITES["Danse Draco"], CAPACITES["Vent Violent"]], {"Sol": 0, "Plante": 0.25, "Feu": 0.5, "Eau": 0.5, "Glace": 4, "Combat": 0.5, "Insecte": 0.5, "Roche":2, "Dragon":2,"Fée":2})
 brindibou = Pokemon("Brindibou", "Plante", 60, [68, 55, 55, 50,50, 112], [191, 128, 128, 122, 122, 299],  [CAPACITES["Lame Feuille"], CAPACITES["Aéropique"], CAPACITES["Lame D'Air"], CAPACITES["Éco-Sphère"]], {"Plante": 0.25, "Feu": 2, "Eau": 0.5, "Glace": 4, "Sol": 0, "Combat": 0.5, "Poison": 2,"Vol":2,"Roche":2})
-avaltout = Pokemon("Avaltout", "Poison", 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Detricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
+avaltout = Pokemon("Avaltout", "Poison", 55, [100, 73, 83, 73, 83, 55], [207, 125, 135, 125, 135, 107], [CAPACITES["Détricanon"], CAPACITES["Repos"], CAPACITES["Bombe Beurk"], CAPACITES["Séisme"]], {"Sol": 2, "Psy": 2, "Insecte": 0.5, "Plante": 0.5, "Fée": 0.5, "Combat": 0.5, "Poison": 0.5})
 
 combat = Combat(roserade, dracolosse, [roserade, milobellus, carchacrok], [brindibou, dracolosse, avaltout])
 combat.faire_un_combat()
