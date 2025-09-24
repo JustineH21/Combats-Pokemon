@@ -1,4 +1,4 @@
-from random import *
+import random
 
 class Error(Exception):
     #Classe permettant de générer des messages d'erreur, ça permettra d'éviter que ça plante
@@ -252,14 +252,14 @@ class Combat:
     def ajouter_objet(self, nom, objet_type, equipe, info):
         """ Crée l'objet puis l'ajoute à la liste des objets de l'équipe """
         trouve = False
-        for i in range(len(self.listes_objet[equipe])):
-            if self.listes_objet[equipe][i][0] == nom: # si l'objet est déja dans la liste, on ajoute 1 à sa quantité
-                self.listes_objet[equipe][i][2] += 1
-                trouve = True
-        if trouve == False:
-            objet = Objets(nom, objet_type, equipe, info)
-            self.listes_objet[equipe].append([objet.nom, objet, 1])
-        self.listes_objet[equipe][1].quantite += 1
+        while trouve == True:
+            for i in range(len(self.listes_objet[equipe])):
+                if self.listes_objet[equipe][i][0] == nom: # si l'objet est déja dans la liste, on ajoute 1 à sa quantité
+                    self.listes_objet[equipe][i][2] += 1
+                    trouve = True
+            if trouve == False:
+                objet = Objets(nom, objet_type, info)
+                self.listes_objet[equipe].append([objet.nom, objet, 1])
     
     def choisir_nombre(self, texte:str, nb_min:int, nb_max:int):
         """ Demande au joueur de choisir un nombre jusqu'à ce que celui-ci soit valide et renvoie son choix"""
@@ -676,7 +676,7 @@ class Combat:
                 pokemon.statut = None  
                 pokemon.statut_duree = 0
                 for capacite in pokemon.capacites:
-                    capacite.PP = capacite.PP_max
+                    capacite.PP = capacite.PP_initial
 
         nb = {"joueur":random.randint(1, 3), "ordi": random.randint(1, 3)}
         self.player = "joueur"
