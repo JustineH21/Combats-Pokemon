@@ -280,8 +280,12 @@ class Combat:
     
     def choisir_capacite(self, pokemon):
         """ Demande au joueur de choisir une des capacités du Pokémon en jeu et renvoie le nom de la capacité choisie """
+        diff = 0
         for i in range(4): # car chaque Pokémon a 4 capacités
-            print(i+1, ":", pokemon.capacites[i].nom)
+            if pokemon.capacites[i].PP > 0:
+                print((i+1-diff), ":", pokemon.capacites[i].nom)
+            else:
+                diff += 1
         choix = self.choisir_nombre("Numéro de la capacité choisie : ", 1, 4)
         return pokemon.capacites[choix - 1]
     
@@ -314,15 +318,15 @@ class Combat:
                 liste = []
                 PV_necessaire = self.pokemons_en_jeu["ordi"].stats[0] - self.pokemons_en_jeu["ordi"].PV
                 PV_max = 0 # le maximum que l'on peut rajouter en PV avec l'objet le plus haut (hors Potion Max)
-                for obj in self.listes_objet["ordi"][1]:
-                    if obj.objet_type == "Soins":
-                        if obj.info == "max":
+                for obj in self.listes_objet["ordi"]:
+                    if obj[1].objet_type == "Soins":
+                        if obj[1].info == "max":
                             coeff = None
-                        elif obj.info > PV_max:
-                            PV_max = obj.info
-                        efficacite = 1 - abs(obj.info - PV_necessaire)/PV_necessaire
+                        elif obj[1].info > PV_max:
+                            PV_max = obj[1].info
+                        efficacite = 1 - abs(obj[1].info - PV_necessaire)/PV_necessaire
                         coeff = efficacite*0.7 + obj.quantite*0.3
-                        liste.append([obj, coeff]) # crée une liste des objets de soins et de leur coeff
+                        liste.append([obj[1], coeff]) # crée une liste des objets de soins et de leur coeff
 
                 if len(liste) == 0:
                     return False
@@ -417,15 +421,15 @@ class Combat:
             meilleur_pokemon = liste[0]
 
         if rea:
-            return meilleur_pokemon
+            return meilleur_pokemon[0]
         else:
-            self.action_retardee["ordi"] = {"action": "switch", "nouveau_pokemon": meilleur_pokemon}
+            self.action_retardee["ordi"] = {"action": "switch", "nouveau_pokemon": meilleur_pokemon[0]}
             return True
 
     def changer_pokemon(self, nouveau_pokemon, equipe):
         """ Permet de changer de Pokémon en ayant déjà le nouveau Pokémon à mettre en jeu """
         self.pokemons_en_jeu[equipe] = nouveau_pokemon
-        print(equipe + " envoie " + self.pokemons_en_jeu[equipe].getNom() + " au combat !")
+        print(equipe + " envoie " + self.pokemons_en_jeu[equipe].nom + " au combat !")
 
     def liste_pokemons_vivants_pas_en_jeu(self):
         pokemons_vivants = []
@@ -525,6 +529,7 @@ class Combat:
                 for capacite in pokemon.capacites:
                     if capacite.priorite > priorite_max[0] and (capacite.classe == "Physique" or capacite.classe == "Spéciale"):
                         priorite_max = [capacite.priorite, capacite]
+                self.action_retardee["ordi"] = {"action": "attaquer", "capacite": priorite_max[1]}
                 action_faite = True
             else: # si aucune de ces situations, choisit son action en fonction du type de la dernière attaque reçue
                 action_faite = self.choisir_attaque_IA(pokemon, type_derniere_attaque_recue)
@@ -713,8 +718,6 @@ class Combat:
             self.player = "ordi"
             self.choisir_option_ordi(self.pokemons_en_jeu["joueur"].type_derniere_attaque_recue)
             
-            print(self.action_retardee["ordi"])
-            print(self.action_retardee["joueur"])
             if self.action_retardee["ordi"]["action"] == "switch" or self.action_retardee["joueur"]["action"] == "switch":
                 if self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"]: # si les deux changent de Pokémon, on calcule la priorité
                     if self.action_retardee["ordi"]["nouveau_pokemon"].stats[5] == self.action_retardee["joueur"]["nouveau_pokemon"].stats[5]:
@@ -749,22 +752,32 @@ class Combat:
                     self.action_retardee["ordi"]["objet"].utiliser_objet(self.action_retardee["ordi"]["pokemon"])
 
             if self.action_retardee["ordi"]["action"] == "attaquer" or self.action_retardee["joueur"]["action"] == "attaquer":
-                if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
-                    self.player = "ordi"
-                    self.action_retardee["ordi"]["capacite"].utiliser_capacite()
-                    self.action_retardee["ordi"]["capacite"].PP -= 1
-                elif self.action_retardee["ordi"]["capacite"].priorite < self.action_retardee["joueur"]["capacite"].priorite:
-                    self.player = "joueur"
-                    self.action_retardee["joueur"]["capacite"].utiliser_capacite()
-                    self.action_retardee["joueur"]["capacite"].PP -= 1
-                elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]: # si les capacités ont la même priorité, on compare les vitesses des Pokémon
-                    self.player = "ordi"
-                    self.action_retardee["ordi"]["capacite"].utiliser_capacite()
-                    self.action_retardee["ordi"]["capacite"].PP -= 1
+                if self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"]: # si les deux attaquent, on calcule la priorité
+                    if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
+                        self.player = "ordi"
+                        self.action_retardee["ordi"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+                        self.action_retardee["ordi"]["capacite"].PP -= 1
+                    elif self.action_retardee["ordi"]["capacite"].priorite < self.action_retardee["joueur"]["capacite"].priorite:
+                        self.player = "joueur"
+                        self.action_retardee["joueur"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+                        self.action_retardee["joueur"]["capacite"].PP -= 1
+                    elif self.pokemons_en_jeu["ordi"].stats[5] > self.pokemons_en_jeu["joueur"].stats[5]: # si les capacités ont la même priorité, on compare les vitesses des Pokémon
+                        self.player = "ordi"
+                        self.action_retardee["ordi"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+                        self.action_retardee["ordi"]["capacite"].PP -= 1
+                    else:
+                        self.player = "joueur"
+                        self.action_retardee["joueur"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+                        self.action_retardee["joueur"]["capacite"].PP -= 1
                 else:
-                    self.player = "joueur"
-                    self.action_retardee["joueur"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
-                    self.action_retardee["joueur"]["capacite"].PP -= 1
+                    if self.action_retardee["joueur"]["action"] == "attaquer":
+                        self.player = "joueur"
+                        self.action_retardee["joueur"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
+                        self.action_retardee["joueur"]["capacite"].PP -= 1
+                    else:
+                        self.player = "ordi"
+                        self.action_retardee["ordi"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["ordi"], self.pokemons_en_jeu["joueur"])
+                        self.action_retardee["ordi"]["capacite"].PP -= 1
                 
                 # si on avait défini une attaque à faire au prochain tour en changeant de Pokémon, on enregistre directement le changement
                 if len(self.action_retardee["ordi"]) == 3:
