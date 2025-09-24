@@ -281,7 +281,7 @@ class Combat:
     def choisir_capacite(self, pokemon):
         """ Demande au joueur de choisir une des capacités du Pokémon en jeu et renvoie le nom de la capacité choisie """
         for i in range(4): # car chaque Pokémon a 4 capacités
-            print(i+1, ":", pokemon.capacites[i])
+            print(i+1, ":", pokemon.capacites[i].nom)
         choix = self.choisir_nombre("Numéro de la capacité choisie : ", 1, 4)
         return pokemon.capacites[choix - 1]
     
@@ -687,8 +687,8 @@ class Combat:
         else:
             print("Vous obtenez un Casque Brut")
         for i in range(len(self.equipes["joueur"])):
-            print(i+1, ". ", self.equipes["joueur"][i])
-        choix = {"joueur": self.choisir_nombre("Choisissez le Pokémon à qui vous voulez donner cet objet", 1, len(self.equipes["joueur"]))}
+            print(i+1, ". ", self.equipes["joueur"][i].nom)
+        choix = {"joueur": self.equipes["joueur"][self.choisir_nombre("Choisissez le Pokémon à qui vous voulez donner cet objet : ", 1, len(self.equipes["joueur"]))]}
 
         self.player = "ordi"
         nb_2 = random.randint(1, len(self.equipes["ordi"]))
