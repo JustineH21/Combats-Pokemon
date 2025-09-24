@@ -24,7 +24,8 @@ class Pokemon:
         self.role = self.definir_role_orientation()[1] # Tank, Sweeper ou None
         self.objet_tenu = None
         self.statut = None  
-        self.statut_duree = 0  
+        self.statut_duree = 0
+        self.type_derniere_attaque_recue = None # pour l'IA
 
     def definir_role_orientation(self):
         """ Définit le rôle (tank, weeper ou rien) et l'orientation (physique ou rien) du Pokémon """
@@ -120,6 +121,7 @@ class Capacite:
         self.valeur_effet = valeur_effet
     
     def utiliser_capacite(self, attaquant:Pokemon, cible:Pokemon):
+        attaquant.type_derniere_attaque_recue = self.type # pour l'IA
         print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), self.nom))
 
         if self.effet_attaque != None and self.valeur_effet != None:  # Si attaque à effets
@@ -186,49 +188,49 @@ class Capacite:
             print("{} perd {} HP !".format(cible.getNom(), degats_infliges))
 
 
-        def capacites_noms(liste_noms):
-            return [CAPACITES[nom] for nom in liste_noms if nom in CAPACITES]
+    def capacites_noms(liste_noms):
+        return [CAPACITES[nom] for nom in liste_noms if nom in CAPACITES]
 
-        #nouveau 
-        def infliger_statut(self, pokemon, statut):
-            if pokemon.statut is None:
-                pokemon.statut = statut
-                if statut in ["Sommeil"]:
-                    pokemon.statut_duree = random.randint(
-                        STATUTS[statut]["duree_min"], STATUTS[statut]["duree_max"])
-                elif statut == "Gel":
-                    pokemon.statut_duree = -1  # on le conserve tant qu'il ne se dégèle pas
-                print(f"{pokemon.nom} est maintenant {statut.lower()} !")
+    #nouveau 
+    def infliger_statut(self, pokemon, statut):
+        if pokemon.statut is None:
+            pokemon.statut = statut
+            if statut in ["Sommeil"]:
+                pokemon.statut_duree = random.randint(
+                    STATUTS[statut]["duree_min"], STATUTS[statut]["duree_max"])
+            elif statut == "Gel":
+                pokemon.statut_duree = -1  # on le conserve tant qu'il ne se dégèle pas
+            print(f"{pokemon.nom} est maintenant {statut.lower()} !")
+        else:
+            print(f"{pokemon.nom} est déjà affecté par {pokemon.statut.lower()}.")
+
+        #nouveau
+    def peut_agir(self, pokemon):
+        statut = pokemon.statut
+        if statut is None:
+            return True
+
+        effets = STATUTS[statut]
+    
+        if effets["effet"] == "inactif":
+            print(f"{pokemon.nom} dort et ne peut pas attaquer !")
+            return False
+    
+        if effets["effet"] == "inactif_prob":
+            if random.random() > effets["probabilite"]:
+                print(f"{pokemon.nom} est gelé et ne peut pas attaquer !")
+                return False
             else:
-                print(f"{pokemon.nom} est déjà affecté par {pokemon.statut.lower()}.")
-
-            #nouveau
-        def peut_agir(self, pokemon):
-            statut = pokemon.statut
-            if statut is None:
+                print(f"{pokemon.nom} brise la glace et peut attaquer !")
+                pokemon.statut = None
                 return True
     
-            effets = STATUTS[statut]
-        
-            if effets["effet"] == "inactif":
-                print(f"{pokemon.nom} dort et ne peut pas attaquer !")
+        if effets["effet"] == "chance_inactif":
+            if random.random() < effets["probabilite"]:
+                print(f"{pokemon.nom} est paralysé et ne peut pas attaquer !")
                 return False
-        
-            if effets["effet"] == "inactif_prob":
-                if random.random() > effets["probabilite"]:
-                    print(f"{pokemon.nom} est gelé et ne peut pas attaquer !")
-                    return False
-                else:
-                    print(f"{pokemon.nom} brise la glace et peut attaquer !")
-                    pokemon.statut = None
-                    return True
-        
-            if effets["effet"] == "chance_inactif":
-                if random.random() < effets["probabilite"]:
-                    print(f"{pokemon.nom} est paralysé et ne peut pas attaquer !")
-                    return False
-        
-            return True
+    
+        return True
 
 class Combat:
     def __init__(self, premier_pokemon_a_jouer_joueur:Pokemon, premier_pokemon_a_jouer_ordi:Pokemon, equipe_joueur:list, equipe_ordi:list, action_retardee: dict):
@@ -709,7 +711,7 @@ class Combat:
             self.player = "joueur"
             self.choisir_option_joueur()
             self.player = "ordi"
-            self.choisir_option_ordi()
+            self.choisir_option_ordi(self.pokemons_en_jeu["joueur"].type_derniere_attaque_recue)
             
             if self.action_retardee["ordi"]["action"] == "switch" or self.action_retardee["joueur"]["action"] == "switch":
                 if self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"]: # si les deux changent de Pokémon, on calcule la priorité
