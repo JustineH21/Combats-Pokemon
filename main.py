@@ -122,7 +122,7 @@ class Capacite:
     
     def utiliser_capacite(self, attaquant:Pokemon, cible:Pokemon):
         attaquant.type_derniere_attaque_recue = self.type # pour l'IA
-        print("{} ATTAQUE {} !!".format(self.pokemons_en_jeu[self.player].getNom(), self.nom))
+        print("{} ATTAQUE {} !!".format(attaquant.getNom(), cible.getNom()))
 
         if self.effet_attaque != None and self.valeur_effet != None:  # Si attaque à effets
             if self.effet_attaque == 'attaque-e':
@@ -178,7 +178,7 @@ class Capacite:
                 print("COUP CRITIQUE !")
             nombre = random.randint(85, 100)/100
             cm = stab * efficacite * coup_critique * nombre
-            degats_infliges = abs(degats_infliges * cm)
+            degats_infliges = round(abs(degats_infliges * cm))
             if cible.objet_tenu != None and self.classe == "Physique": 
                 # si la cible porte un casque brut, elle ne peut pas perdre plus de 1/6 de ses PV maximums lors d'une attaque physique
                 if cible.objet_tenu.nom == "Casque Brut" and degats_infliges > cible.stats[0]/6:
@@ -713,6 +713,8 @@ class Combat:
             self.player = "ordi"
             self.choisir_option_ordi(self.pokemons_en_jeu["joueur"].type_derniere_attaque_recue)
             
+            print(self.action_retardee["ordi"])
+            print(self.action_retardee["joueur"])
             if self.action_retardee["ordi"]["action"] == "switch" or self.action_retardee["joueur"]["action"] == "switch":
                 if self.action_retardee["ordi"]["action"] == self.action_retardee["joueur"]["action"]: # si les deux changent de Pokémon, on calcule la priorité
                     if self.action_retardee["ordi"]["nouveau_pokemon"].stats[5] == self.action_retardee["joueur"]["nouveau_pokemon"].stats[5]:
@@ -746,7 +748,7 @@ class Combat:
                     self.player = "ordi"
                     self.action_retardee["ordi"]["objet"].utiliser_objet(self.action_retardee["ordi"]["pokemon"])
 
-            if self.action_retardee["ordi"]["action"] == "attaque" or self.action_retardee["joueur"]["action"] == "attaque":
+            if self.action_retardee["ordi"]["action"] == "attaquer" or self.action_retardee["joueur"]["action"] == "attaquer":
                 if self.action_retardee["ordi"]["capacite"].priorite > self.action_retardee["joueur"]["capacite"].priorite:
                     self.player = "ordi"
                     self.action_retardee["ordi"]["capacite"].utiliser_capacite()
@@ -761,7 +763,7 @@ class Combat:
                     self.action_retardee["ordi"]["capacite"].PP -= 1
                 else:
                     self.player = "joueur"
-                    self.action_retardee["joueur"]["capacite"].utiliser_capacite()
+                    self.action_retardee["joueur"]["capacite"].utiliser_capacite(self.pokemons_en_jeu["joueur"], self.pokemons_en_jeu["ordi"])
                     self.action_retardee["joueur"]["capacite"].PP -= 1
                 
                 # si on avait défini une attaque à faire au prochain tour en changeant de Pokémon, on enregistre directement le changement
